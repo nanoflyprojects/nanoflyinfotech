@@ -1,0 +1,16 @@
+# Clean URL -> Serve HTML file (internal rewrite)
+/about          /about.html          200
+/services       /services.html       200
+/contact        /contact.html        200
+/certifications /certifications.html   200
+
+
+# Old .html URL -> Redirect to clean URL
+/about.html     /about               301
+/services.html  /services            301
+/contact.html   /contact             301
+/certifications.html   /certifications           301
+
+# Subfolders
+/certificate/*      /certificate/:splat.html      200
+/certificate/*.html /certificate/:splat           301

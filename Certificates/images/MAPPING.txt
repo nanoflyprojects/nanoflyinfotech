@@ -1,0 +1,17 @@
+certificate-abirami-k.png -> Abirami.html
+certificate-dk-dhanushya.png -> Dhanushya.html
+certificate-kaviyadharshini-p.png -> Kaviyadharshini.html
+certificate-nethra-tharani-a.png -> Nethra.html
+certificate-ranjith-bt.png -> Ranjith.html
+certificate-stanish-appalo-ja.png -> Stanish.html
+certificate-viswanath-b.png -> Viswanath.html
+certificate-kansil-nisha-k.png -> kansilnisha.html
+certificate-mohanasudhan-s.png -> mohanasudhan.html
+certificate-musthaq-ahamed-r.png -> musthaq-ahamed-r.html
+certificate-nithish-raja-m.png -> nithishraja.html
+certificate-mk-prasanna.png -> prasanna.html
+certificate-santhosh-g.png -> santhosh.html
+certificate-saran-kumar-r.png -> sarankumar.html
+certificate-selva-karthick-k.png -> selvakarthick.html
+certificate-sri-akash-g.png -> sriakash.html
+certificate-surendran-b.png -> surendran.html
