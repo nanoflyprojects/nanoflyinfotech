@@ -1,0 +1,1024 @@
+/*--------------------------------------------------------------
+# Nano Fly InfoTech — Site-wide additions
+# (Kept separate from main.css so the original template file
+#  stays untouched and diff-able.)
+--------------------------------------------------------------*/
+
+/*----------------------------------------------------------------
+# WhatsApp Floating Button (all pages)
+----------------------------------------------------------------*/
+.whatsapp-float {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  right: max(24px, env(safe-area-inset-right));
+  background-color: #25d366;
+  color: #fff;
+  border-radius: 50%;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45);
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.whatsapp-float i {
+  font-size: 32px;
+  line-height: 0;
+}
+
+.whatsapp-float:hover {
+  color: #fff;
+  transform: scale(1.08);
+  box-shadow: 0 6px 22px rgba(37, 211, 102, 0.6);
+}
+
+.whatsapp-float::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);
+  animation: whatsapp-pulse 2.4s infinite;
+  pointer-events: none;
+}
+
+@keyframes whatsapp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);
+  }
+
+  70% {
+    box-shadow: 0 0 0 16px rgba(37, 211, 102, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+/* Tablet & small laptop */
+@media (max-width: 991px) {
+  .whatsapp-float {
+    width: 56px;
+    height: 56px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    right: max(20px, env(safe-area-inset-right));
+  }
+
+  .whatsapp-float i {
+    font-size: 29px;
+  }
+}
+
+/* Phones */
+@media (max-width: 575px) {
+  .whatsapp-float {
+    width: 50px;
+    height: 50px;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    right: max(14px, env(safe-area-inset-right));
+    box-shadow: 0 3px 12px rgba(37, 211, 102, 0.5);
+  }
+
+  .whatsapp-float i {
+    font-size: 25px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  .whatsapp-float {
+    width: 44px;
+    height: 44px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: max(12px, env(safe-area-inset-right));
+  }
+
+  .whatsapp-float i {
+    font-size: 22px;
+  }
+}
+
+/*----------------------------------------------------------------
+# Header nav: "Contact Us" CTA pill + active-page highlight
+----------------------------------------------------------------*/
+
+/* Desktop nav (>=1280px): Contact Us gets a filled pill so it reads as
+   a call-to-action, not just another link. */
+@media (min-width: 1280px) {
+  .navbar a.nav-cta {
+    background: var(--color-primary);
+    color: #fff !important;
+    padding: 8px 18px !important;
+    border-radius: 30px;
+    margin-left: 4px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  .navbar a.nav-cta:hover {
+    background: #006b5f;
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+
+  /* Pill button doesn't need the underline treatment other links get */
+  .navbar a.nav-cta:before {
+    display: none;
+  }
+
+  /* Whichever page is active gets the accent color instead of the
+     default teal, so Contact Us-as-CTA and Contact Us-as-active-page
+     still read as visually distinct states. */
+  .navbar a.nav-cta.active {
+    background: var(--color-secondary);
+  }
+
+  /* Non-CTA active link: accent-colored text + underline, distinct
+     from the plain white :hover state so the current page stays
+     visibly marked even when the mouse moves away. */
+  .navbar li>a.active:not(.nav-cta),
+  .navbar li>a.active:not(.nav-cta):focus {
+    color: var(--color-secondary);
+  }
+}
+
+/* Mobile nav (<1280px, full-screen overlay menu) */
+@media (max-width: 1279px) {
+  .navbar a.nav-cta {
+    background: var(--color-primary);
+    color: #fff !important;
+    border-radius: 8px;
+    margin: 4px 20px;
+  }
+
+  .navbar a.nav-cta.active {
+    background: var(--color-secondary);
+  }
+
+  .navbar li>a.active:not(.nav-cta),
+  .navbar li>a.active:not(.nav-cta):focus {
+    color: var(--color-secondary);
+  }
+}
+
+/*----------------------------------------------------------------
+# Internal page header (About / Services / Plans / Contact)
+----------------------------------------------------------------*/
+.page-header-section {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #0aa596 100%);
+  padding: 70px 0 60px;
+  text-align: center;
+  color: #fff;
+}
+
+.page-header-section h1 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.page-header-section p {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 700px;
+  margin: 0 auto;
+  font-size: 17px;
+}
+
+.page-header-section .breadcrumb-trail {
+  margin-top: 18px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.page-header-section .breadcrumb-trail a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.page-header-section .breadcrumb-trail a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 575px) {
+  .page-header-section h1 {
+    font-size: 30px;
+  }
+}
+
+/*----------------------------------------------------------------
+# Plans Page — Pricing Cards with dual CTA (WhatsApp + Email)
+----------------------------------------------------------------*/
+.plans-group-title {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 26px;
+  margin-bottom: 6px;
+}
+
+.plans-group-sub {
+  color: #6f6f6f;
+  margin-bottom: 35px;
+}
+
+.plan-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 30px 30px;
+  height: 100%;
+  position: relative;
+  box-shadow: 0 3px 20px -2px rgba(108, 117, 125, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px -5px rgba(0, 131, 116, 0.25);
+}
+
+.plan-card.featured {
+  border: 2px solid var(--color-primary);
+}
+
+.plan-card .plan-badge {
+  position: absolute;
+  top: -14px;
+  right: 24px;
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 6px 16px;
+  border-radius: 30px;
+  text-transform: uppercase;
+}
+
+.plan-card h3 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--color-default);
+  margin-bottom: 4px;
+}
+
+.plan-card .plan-price {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--color-primary);
+  margin: 10px 0 4px;
+}
+
+.plan-card .plan-price span {
+  font-size: 15px;
+  font-weight: 400;
+  color: #8a8a8a;
+}
+
+.plan-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 25px;
+  flex-grow: 1;
+}
+
+.plan-card ul li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  color: #555;
+  font-size: 15px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.07);
+}
+
+.plan-card ul li:last-child {
+  border-bottom: none;
+}
+
+.plan-card ul li i {
+  color: var(--color-primary);
+  font-size: 17px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.plan-cta {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.plan-cta a {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.plan-cta .btn-wa {
+  background: #25d366;
+  color: #fff;
+}
+
+.plan-cta .btn-wa:hover {
+  background: #1fb457;
+  color: #fff;
+}
+
+.plan-cta .btn-mail {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+}
+
+.plan-cta .btn-mail:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/*----------------------------------------------------------------
+# Services page — extra polish
+----------------------------------------------------------------*/
+.service-detail-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 35px 30px;
+  height: 100%;
+  box-shadow: 0 3px 20px -2px rgba(108, 117, 125, 0.12);
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+.service-detail-card:hover {
+  transform: translateY(-6px);
+}
+
+.service-detail-card .icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(0, 131, 116, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.service-detail-card .icon i {
+  font-size: 28px;
+  color: var(--color-primary);
+}
+
+.service-detail-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.service-detail-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 15px auto 0;
+  max-width: 320px;
+  text-align: left;
+}
+
+.service-detail-card ul li {
+  padding: 6px 0;
+  color: #666;
+  font-size: 14.5px;
+}
+
+.service-detail-card ul li i {
+  color: var(--color-primary);
+  margin-right: 8px;
+}
+
+/*----------------------------------------------------------------
+# About page — value / mission cards
+----------------------------------------------------------------*/
+.value-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 30px 25px;
+  text-align: center;
+  height: 100%;
+  box-shadow: 0 3px 20px -2px rgba(108, 117, 125, 0.12);
+}
+
+.value-card .icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+
+.value-card .icon i {
+  color: #fff;
+  font-size: 24px;
+}
+
+.value-card h4 {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.value-card p {
+  color: #6f6f6f;
+  font-size: 14.5px;
+  margin-bottom: 0;
+}
+
+/*----------------------------------------------------------------
+# Certifications — listing grid (certification.html)
+----------------------------------------------------------------*/
+.cert-grid-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 30px;
+  height: 100%;
+  text-align: center;
+  box-shadow: 0 3px 20px -2px rgba(108, 117, 125, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.cert-grid-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px -5px rgba(0, 131, 116, 0.2);
+}
+
+.cert-grid-card .cert-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f6f6;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-grid-card .cert-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.cert-grid-card:hover .cert-thumb-wrap img {
+  transform: scale(1.05);
+}
+
+.cert-grid-card .cert-thumb-wrap img.cert-fallback-img {
+  width: 46%;
+  height: 46%;
+  object-fit: contain;
+  opacity: 0.35;
+}
+
+.cert-grid-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--color-default);
+}
+
+.cert-role-badge {
+  display: inline-block;
+  background: rgba(0, 131, 116, 0.1);
+  color: var(--color-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 5px 14px;
+  border-radius: 30px;
+  margin-bottom: 12px;
+}
+
+.cert-grid-card p {
+  color: #6f6f6f;
+  font-size: 14px;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.cert-grid-card .cert-view-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.cert-grid-card .cert-view-link:hover {
+  color: #00b6a1;
+}
+
+/*----------------------------------------------------------------
+# Certifications — individual certificate detail page
+----------------------------------------------------------------*/
+.cert-detail-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 3px 25px -2px rgba(108, 117, 125, 0.15);
+}
+
+.cert-detail-card .cert-detail-img-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f3f6f6;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-detail-card .cert-detail-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cert-detail-card .cert-detail-img-wrap img.cert-fallback-img {
+  width: 40%;
+  height: 40%;
+  object-fit: contain;
+  opacity: 0.3;
+}
+
+.cert-detail-card h2 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 26px;
+  margin-bottom: 10px;
+  color: var(--color-default);
+}
+
+.cert-detail-card p {
+  color: #6f6f6f;
+  font-size: 15.5px;
+  line-height: 1.8;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cert-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.cert-detail-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.btn-cert-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-cert-primary:hover {
+  background: #00695d;
+  color: #fff;
+}
+
+.btn-cert-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+}
+
+.btn-cert-secondary:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+@media print {
+
+  #topbar-mount,
+  #header-mount,
+  #footer-mount,
+  .whatsapp-float,
+  .cert-detail-actions,
+  .page-header-section .breadcrumb-trail {
+    display: none !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .cert-detail-card {
+    padding: 26px 18px;
+  }
+
+  .cert-detail-actions a {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+/*----------------------------------------------------------------
+# About page — Founder's Note
+----------------------------------------------------------------*/
+.founder-note {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 3px 25px -2px rgba(108, 117, 125, 0.15);
+  overflow: hidden;
+}
+
+.founder-note .founder-photo-col {
+  padding: 0;
+  min-height: 340px;
+  overflow: hidden;
+}
+
+.founder-note .founder-photo-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+}
+
+.founder-note .founder-photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.founder-note .founder-content {
+  padding: 45px 45px 45px 10px;
+}
+
+.founder-note .founder-quote-icon {
+  font-size: 34px;
+  color: var(--color-primary);
+  opacity: 0.35;
+  margin-bottom: 10px;
+}
+
+.founder-note .founder-content p {
+  color: #555;
+  font-size: 16px;
+  line-height: 1.9;
+  margin-bottom: 16px;
+}
+
+.founder-note .founder-signature h4 {
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 2px;
+  color: var(--color-default);
+}
+
+.founder-note .founder-signature span {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+@media (max-width: 991px) {
+  .founder-note .founder-content {
+    padding: 10px 30px 40px;
+  }
+
+  .founder-note .founder-photo-col {
+    min-height: 300px;
+  }
+
+  .founder-note .founder-photo-wrap {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 767px) {
+  .founder-note .founder-photo-col {
+    min-height: 380px;
+  }
+
+  .founder-note .founder-photo-wrap {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 575px) {
+  .founder-note .founder-photo-col {
+    min-height: 300px;
+  }
+
+  .founder-note .founder-photo-wrap {
+    min-height: 300px;
+  }
+
+  .founder-note .founder-content {
+    padding: 5px 22px 32px;
+  }
+}
+
+/*----------------------------------------------------------------
+# Contact page — details panel (replaces the map)
+----------------------------------------------------------------*/
+.contact-details-panel {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #0aa596 100%);
+  border-radius: 20px;
+  padding: 36px 32px;
+  color: #fff;
+  box-shadow: 0 3px 25px -2px rgba(108, 117, 125, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-details-panel h3 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.contact-details-panel .panel-sub {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14.5px;
+  margin-bottom: 26px;
+}
+
+.contact-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.contact-detail-row:first-of-type {
+  padding-top: 0;
+}
+
+.contact-detail-row i {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.contact-detail-row h4 {
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.contact-detail-row p {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.contact-detail-row p a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.btn-panel-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 26px;
+  padding: 13px 20px;
+  background: #fff;
+  color: var(--color-primary);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.btn-panel-wa:hover {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-primary);
+}
+
+.panel-social {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.panel-social a {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.panel-social a:hover {
+  background: #fff;
+  color: var(--color-primary);
+}
+
+@media (max-width: 991px) {
+  .contact-details-panel {
+    padding: 30px 24px;
+  }
+}
+
+/*----------------------------------------------------------------
+# CTA banner (used on Home / Plans)
+----------------------------------------------------------------*/
+.cta-banner {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #0aa596 100%);
+  border-radius: 20px;
+  padding: 50px 40px;
+  color: #fff;
+  text-align: center;
+}
+
+.cta-banner h2 {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  font-size: 30px;
+  margin-bottom: 12px;
+}
+
+.cta-banner p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 24px;
+}
+
+.cta-banner .btn-group-cta {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta-banner .btn-group-cta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.cta-banner .btn-white {
+  background: #fff;
+  color: var(--color-primary);
+}
+
+.cta-banner .btn-white:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.cta-banner .btn-outline-white {
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  color: #fff;
+}
+
+.cta-banner .btn-outline-white:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/*----------------------------------------------------------------
+# Global responsive / small-mobile audit (320px – 480px)
+# A defensive safety net so nothing forces horizontal scroll or
+# clips text on very small phones, on top of the per-component
+# breakpoints already defined above.
+----------------------------------------------------------------*/
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Long unbroken strings (emails, URLs) should wrap instead of
+   pushing the layout wider than the viewport. */
+.footer-contact p,
+.contact-detail-row p,
+.page-header-section p {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (max-width: 480px) {
+  .page-header-section {
+    padding: 55px 0 45px;
+  }
+
+  .page-header-section h1 {
+    font-size: 26px;
+  }
+
+  .contact-details-panel,
+  .form-wrapper {
+    padding: 24px 18px !important;
+  }
+
+  .plan-card {
+    padding: 34px 22px 24px;
+  }
+
+  .plan-cta {
+    flex-direction: column;
+  }
+
+  .cta-banner {
+    padding: 36px 22px;
+  }
+
+  .cta-banner h2 {
+    font-size: 24px;
+  }
+
+  .founder-note .founder-content {
+    padding: 5px 18px 28px;
+  }
+
+  .service-detail-card,
+  .value-card,
+  .cert-grid-card {
+    padding: 24px 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .page-header-section h1 {
+    font-size: 22px;
+  }
+
+  .hero h2 {
+    font-size: 28px;
+  }
+}
