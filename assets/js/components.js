@@ -30,12 +30,16 @@
   // per-plan WhatsApp links without repeating the phone number anywhere.
   window.nanoflyWaLink = waLink;
 
+  // Absolute paths so links resolve the same way regardless of which
+  // page/folder depth they're rendered from. Combined with Netlify's
+  // pretty-URL support (or Vercel's cleanUrls: true), these resolve to
+  // e.g. nanoflyinfotech.com/about instead of /about.html.
   var NAV_LINKS = [
-    { page: "home", label: "Home", href: "index.html" },
-    { page: "about", label: "About Us", href: "about.html" },
-    { page: "services", label: "Services", href: "services.html" },
-    { page: "plans", label: "Plans", href: "plans.html" },
-    { page: "contact", label: "Contact Us", href: "contact.html" }
+    { page: "home", label: "Home", href: "/" },
+    { page: "about", label: "About Us", href: "/about" },
+    { page: "services", label: "Services", href: "/services" },
+    { page: "plans", label: "Plans", href: "/plans" },
+    { page: "contact", label: "Contact Us", href: "/contact" }
   ];
 
   function topbarHTML() {
@@ -95,7 +99,7 @@
     return (
       '<header id="header" class="header d-flex align-items-center">' +
       '<div class="container-fluid container-xl d-flex align-items-center justify-content-between">' +
-      '<a href="index.html" class="logo d-flex align-items-center">' +
+      '<a href="/" class="logo d-flex align-items-center">' +
       '<img src="assets/img/white 2.webp" class="img-fluid" alt="Nano Fly InfoTech logo">' +
       '</a>' +
       '<nav id="navbar" class="navbar"><ul>' + items + '</ul></nav>' +
@@ -113,7 +117,7 @@
       '<div class="container">' +
       '<div class="row gy-4">' +
       '<div class="col-lg-5 col-md-12 footer-info">' +
-      '<a href="index.html" class="logo d-flex align-items-center"></a>' +
+      '<a href="/" class="logo d-flex align-items-center"></a>' +
       '<p>Our key goals include enhancing brand visibility, driving client acquisition and retention, and delivering impactful marketing solutions. We aim to offer innovative educational programs, support professional development, and maximize ROI for our clients as we build strong partnerships and expand our reach.</p>' +
       '<div class="social-links d-flex mt-4">' +
       '<a href="https://www.threads.com/nanoflyinfotech/" class="threads" aria-label="Threads"><i class="bi bi-threads"></i></a>' +
@@ -125,21 +129,21 @@
       '<div class="col-lg-2 col-6 footer-links">' +
       '<h4>Useful Links</h4>' +
       '<ul>' +
-      '<li><a href="index.html">Home</a></li>' +
-      '<li><a href="about.html">About us</a></li>' +
-      '<li><a href="services.html">Services</a></li>' +
-      '<li><a href="plans.html">Plans</a></li>' +
-      '<li><a href="contact.html">Contact us</a></li>' +
+      '<li><a href="/">Home</a></li>' +
+      '<li><a href="/about">About us</a></li>' +
+      '<li><a href="/services">Services</a></li>' +
+      '<li><a href="/plans">Plans</a></li>' +
+      '<li><a href="/contact">Contact us</a></li>' +
       '</ul>' +
       '</div>' +
       '<div class="col-lg-2 col-6 footer-links">' +
       '<h4>Our Services</h4>' +
       '<ul>' +
-      '<li><a href="services.html">Digital Marketing</a></li>' +
-      '<li><a href="services.html">Social Media Management</a></li>' +
-      '<li><a href="plans.html">Website Development</a></li>' +
-      '<li><a href="services.html">SEO Optimization</a></li>' +
-      '<li><a href="services.html">Educational Solutions</a></li>' +
+      '<li><a href="/services">Digital Marketing</a></li>' +
+      '<li><a href="/services">Social Media Management</a></li>' +
+      '<li><a href="/plans">Website Development</a></li>' +
+      '<li><a href="/services">SEO Optimization</a></li>' +
+      '<li><a href="/services">Educational Solutions</a></li>' +
       '</ul>' +
       '</div>' +
       '<div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">' +
