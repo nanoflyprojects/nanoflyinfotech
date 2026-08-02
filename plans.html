@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Pricing Plans | Nano Fly InfoTech</title>
+  <meta
+    content="Nano Fly InfoTech pricing plans for social media management (Basic, Silver, Gold, Platinum) and website development (Portfolio, E-Commerce)."
+    name="description">
+  <link rel="icon" href="assets/img/N.webp" type="image/x-icon">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600;1,700&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet">
+
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+
+  <link href="main.css" rel="stylesheet">
+  <link href="assets/css/custom.css" rel="stylesheet">
+</head>
+
+<body data-page="plans">
+
+  <div id="topbar-mount"></div>
+  <div id="header-mount"></div>
+
+  <section class="page-header-section">
+    <div class="container" data-aos="fade-up">
+      <h1>Pricing Plans</h1>
+      <p>When you smile, we shine. Let's reach new heights — fly with Nano Fly InfoTech.</p>
+      <div class="breadcrumb-trail"><a href="index.html">Home</a> / Plans</div>
+    </div>
+  </section>
+
+  <main id="main">
+
+    <!-- ======= Social Media Management Plans ======= -->
+    <section class="py-5">
+      <div class="container" data-aos="fade-up">
+        <div class="text-center mb-5">
+          <h2 class="plans-group-title">Social Media Management</h2>
+          <p class="plans-group-sub">Monthly plans covering posting, reels, paid promotion and account management.</p>
+        </div>
+        <div id="social-plans" class="row gy-5"></div>
+      </div>
+    </section>
+
+    <!-- ======= Website Development Plans ======= -->
+    <section class="py-5 sections-bg">
+      <div class="container" data-aos="fade-up">
+        <div class="text-center mb-5">
+          <h2 class="plans-group-title">Website Development</h2>
+          <p class="plans-group-sub">One-time website builds with domain, SEO and a full year of maintenance.</p>
+        </div>
+        <div id="website-plans" class="row gy-5 justify-content-center"></div>
+      </div>
+    </section>
+
+    <section class="py-5">
+      <div class="container" data-aos="fade-up">
+        <div class="cta-banner">
+          <h2>Not sure which plan is right for you?</h2>
+          <p>Message us on WhatsApp or drop an email — we're happy to help you choose.</p>
+          <div class="btn-group-cta">
+            <a href="#" class="btn-white nanofly-wa-link"><i class="bi bi-whatsapp"></i> Chat on WhatsApp</a>
+            <a href="mailto:works@nanoflyinfotech.com" class="btn-outline-white"><i class="bi bi-envelope"></i> Email
+              Us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-mount"></div>
+
+  <div id="preloader"></div>
+
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <!-- ======= Plans data + renderer =======
+       Single source of truth for every plan on this page. Add or edit
+       a plan here and both the card markup and the WhatsApp/Email CTA
+       links update automatically — no repeated HTML per plan. -->
+  <script>
+    var EMAIL = "works@nanoflyinfotech.com";
+
+    var socialPlans = [
+      {
+        name: "Basic",
+        price: "11,999",
+        period: "/month",
+        icon: "bi-rocket-takeoff",
+        features: [
+          "Two days once post",
+          "30 days management",
+          "4 reels",
+          "4 paid promotions",
+          "Reach 10k – 20k (Meta paid)"
+        ]
+      },
+      {
+        name: "Silver",
+        price: "21,999",
+        period: "/month",
+        icon: "bi-award",
+        features: [
+          "Daily 1 post",
+          "30 days management",
+          "6 reels",
+          "6 paid promotions",
+          "Reach 20k – 50k (Meta paid)"
+        ]
+      },
+      {
+        name: "Gold",
+        price: "34,999",
+        period: "/month",
+        icon: "bi-gem",
+        featured: true,
+        badge: "Most Popular",
+        features: [
+          "Daily 1 post",
+          "30 days management",
+          "8 reels",
+          "8 paid promotions",
+          "Reach 50k – 100k (Meta paid)"
+        ]
+      },
+      {
+        name: "Platinum",
+        price: "49,999",
+        period: "/month",
+        icon: "bi-stars",
+        features: [
+          "Daily 1 post",
+          "30 days management",
+          "10 reels",
+          "10 paid promotions",
+          "Reach 100k – 150k (Meta paid)"
+        ]
+      },
+      {
+        name: "Account Maintenance",
+        price: "6,999",
+        period: "/month",
+        icon: "bi-gear",
+        features: [
+          "Two days once post",
+          "1 reel",
+          "1 month account maintenance"
+        ]
+      }
+    ];
+
+    var websitePlans = [
+      {
+        name: "Portfolio Website",
+        price: "14,999",
+        period: "one-time",
+        icon: "bi-window",
+        features: [
+          "Website creation",
+          "1 year domain (your business name)",
+          "SEO optimization",
+          "Google Business account creation",
+          "5 pages",
+          "1 year maintenance"
+        ]
+      },
+      {
+        name: "E-Commerce Website",
+        price: "24,999",
+        period: "one-time",
+        icon: "bi-cart-check",
+        featured: true,
+        badge: "Best Value",
+        features: [
+          "Website creation",
+          "1 year domain (your business name)",
+          "SEO optimization",
+          "Google Business account creation",
+          "5 pages",
+          "50 product integration",
+          "1 year maintenance"
+        ]
+      }
+    ];
+
+    function planCard(plan, colClass) {
+      var featuresHTML = plan.features.map(function (f) {
+        return '<li><i class="bi bi-check-circle-fill"></i><span>' + f + "</span></li>";
+      }).join("");
+
+      var waMessage = "Hi Nano Fly InfoTech! I'm interested in the " + plan.name + " plan (\u20B9" + plan.price + " " + plan.period + "). Please share more details.";
+      var emailSubject = encodeURIComponent("Enquiry: " + plan.name + " Plan");
+      var emailBody = encodeURIComponent("Hi Nano Fly InfoTech,\n\nI'm interested in the " + plan.name + " plan (\u20B9" + plan.price + " " + plan.period + "). Please share more details.\n\nThanks!");
+
+      return (
+        '<div class="' + colClass + '">' +
+        '<div class="plan-card' + (plan.featured ? " featured" : "") + '">' +
+        (plan.badge ? '<span class="plan-badge">' + plan.badge + "</span>" : "") +
+        '<div class="icon" style="width:56px;height:56px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">' +
+        '<i class="bi ' + plan.icon + '" style="color:#fff;font-size:24px;"></i>' +
+        "</div>" +
+        "<h3>" + plan.name + "</h3>" +
+        '<div class="plan-price">\u20B9' + plan.price + ' <span>' + plan.period + "</span></div>" +
+        "<ul>" + featuresHTML + "</ul>" +
+        '<div class="plan-cta">' +
+        '<a href="' + window.nanoflyWaLink(waMessage) + '" target="_blank" rel="noopener noreferrer" class="btn-wa"><i class="bi bi-whatsapp"></i> WhatsApp</a>' +
+        '<a href="mailto:' + EMAIL + "?subject=" + emailSubject + "&body=" + emailBody + '" class="btn-mail"><i class="bi bi-envelope"></i> Email</a>' +
+        "</div>" +
+        "</div>" +
+        "</div>"
+      );
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      var socialContainer = document.getElementById("social-plans");
+      socialPlans.forEach(function (plan) {
+        socialContainer.insertAdjacentHTML("beforeend", planCard(plan, "col-lg-4 col-md-6"));
+      });
+
+      var websiteContainer = document.getElementById("website-plans");
+      websitePlans.forEach(function (plan) {
+        websiteContainer.insertAdjacentHTML("beforeend", planCard(plan, "col-lg-5 col-md-6"));
+      });
+    });
+  </script>
+</body>
+
+</html>
