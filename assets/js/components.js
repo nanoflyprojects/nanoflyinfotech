@@ -50,7 +50,7 @@
       '<div class="d-flex align-items-center gap-4">' +
       '<div class="d-flex align-items-center">' +
       '<i class="bi bi-envelope me-2"></i>' +
-      '<a href="mailto:works@nanoflyinfotech.com" class="text-white text-decoration-none">works@nanoflyinfotech.com</a>' +
+      '<a href="mailto:" class="text-white text-decoration-none">nanofly.works@gmail.com</a>' +
       '</div>' +
       '<div class="d-flex gap-3">' +
       '<a href="https://www.facebook.com/nanoflyinfotech/" class="text-white" aria-label="Facebook"><i class="bi bi-facebook"></i></a>' +
@@ -68,7 +68,7 @@
       '<div class="d-flex justify-content-between align-items-center mb-2 fs-7">' +
       '<div class="d-flex align-items-center">' +
       '<i class="bi bi-envelope me-2"></i>' +
-      '<a href="mailto:works@nanoflyinfotech.com" class="text-white text-decoration-none">works@nanoflyinfotech.com</a>' +
+      '<a href="mailto:nanofly.works@gmail.com" class="text-white text-decoration-none">nanofly.works@gmail.com</a>' +
       '</div>' +
       '<div class="d-flex align-items-center"><i class="bi bi-phone me-2"></i> 9487772786</div>' +
       '</div>' +
@@ -153,7 +153,7 @@
       'Marutham Veethi, Thiruppalai, <br>' +
       'Madurai-625014, Tamil Nadu, India <br><br>' +
       '<strong>Phone:</strong> +91 94877 72786, +91 93442 29558<br>' +
-      '<strong>Email:</strong> works@nanoflyinfotech.com<br>' +
+      '<strong>Email:</strong> nanofly.works@gmail.com<br>' +
       '</p>' +
       '</div>' +
       '</div>' +
