@@ -1,0 +1,6 @@
+/* NanoFly brand fonts – drop licensed files into /assets/fonts (see assets/fonts/README.txt).
+   If a file is missing the browser silently uses the fallback in the font stacks. */
+@font-face{font-family:'Posterama';font-weight:600;font-display:swap;src:local('Posterama SemiBold'),local('Posterama-SemiBold'),url('../assets/fonts/Posterama-SemiBold.woff2') format('woff2')}
+@font-face{font-family:'Posterama';font-weight:700;font-display:swap;src:local('Posterama Bold'),local('Posterama-Bold'),url('../assets/fonts/Posterama-Bold.woff2') format('woff2')}
+@font-face{font-family:'Sentic';font-weight:600;font-display:swap;src:local('Sentic SemiBold'),local('Sentic-SemiBold'),url('../assets/fonts/Sentic-SemiBold.woff2') format('woff2')}
+@font-face{font-family:'Sentic';font-weight:700;font-display:swap;src:local('Sentic Bold'),local('Sentic-Bold'),url('../assets/fonts/Sentic-Bold.woff2') format('woff2')}
