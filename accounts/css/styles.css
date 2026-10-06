@@ -336,3 +336,55 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
 .notice.warn{background:var(--warn-lt);color:var(--warn)}
 .steps{margin:0;padding-left:20px;line-height:1.9}
 .quick.full .inst,.quick .inst{display:flex;align-items:center;gap:10px}
+
+/* ---------- v5: period picker, Hands-On Money, team payments ---------- */
+.per{display:inline-flex;gap:6px;flex-wrap:nowrap;max-width:100%}
+.per select{width:auto;min-width:0;background:var(--surface);font-weight:600}
+.per select:disabled{opacity:.55}
+#fy.fy{background:none;width:auto}
+.fy:empty{display:none}
+.dpick-wrap{display:inline-flex}
+.rep-title{font-size:22px;margin:4px 0 var(--gap)}
+
+.ho{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr);gap:14px 28px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--brand);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:var(--gap)}
+.ho-main small{display:block;font-weight:700;color:var(--brand-dk);text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+.ho-fig{font-family:var(--head);font-size:44px;font-weight:600;line-height:1.05;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.ho-fig.sm{font-size:32px}
+.ho-sub{color:var(--muted);font-size:13.5px;margin-top:6px}
+.ho-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ho-cell{display:block;text-align:left;background:var(--bg);border:1px solid transparent;border-radius:var(--r);padding:12px 14px;cursor:pointer;min-width:0}
+.ho-cell small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ho-cell b{display:block;font-family:var(--head);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ho-cell:hover{border-color:var(--brand)}
+.ho-cell.on{background:var(--brand-lt);border-color:var(--brand)}
+.ho-calc{grid-column:1/-1;font-size:14px}
+.ho-calc summary{cursor:pointer;color:var(--muted);font-weight:600;width:max-content;max-width:100%}
+.ho-calc table,table.calc{border-collapse:collapse;width:100%;max-width:520px;margin-top:8px;font-size:14px}
+.ho-calc td,table.calc td{padding:6px 0;border-bottom:1px solid var(--line)}
+.ho-calc td.n,table.calc td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:16px}
+.ho-calc tr.tot td,table.calc tr.tot td{font-weight:700;border-bottom:0;border-top:2px solid var(--line)}
+
+.tklist{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--bg)}
+.tkhead{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tkhead .muted{flex:1;font-size:13px;min-width:160px}
+.tk-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-weight:500;cursor:pointer}
+.tk-row:first-of-type{border-top:0}
+.tk-row input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--brand)}
+.tk-row small{display:block;color:var(--muted);font-size:12.5px}
+.tklist .hint{margin:8px 0 0}
+
+@media (max-width:1100px){.ho{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:720px){
+  .ho{padding:18px;gap:12px}
+  .ho-fig{font-size:34px}
+  .ho-cells{gap:6px}
+  .ho-cell{padding:10px}
+  .ho-cell b{font-size:16px}
+  .per select{padding-left:8px;padding-right:8px;font-size:14px}
+  .top .fy{order:6;width:100%}
+  .top .per{width:100%}.top .per select{flex:1}
+}
+@media print{.ho-cell{border:1px solid #ccc}.ho{border-color:#ccc}}
+.form .tk-row{display:flex;flex-direction:row;align-items:flex-start;gap:10px;font-size:14.5px;color:var(--ink)}
+.form .tk-row input{width:18px;height:18px;min-height:0;padding:0;flex:none}
+.form .tk-row span{flex:1;min-width:0}

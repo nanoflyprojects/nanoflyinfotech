@@ -61,7 +61,7 @@
       <input id="q" type="search" placeholder="Search clients, invoices, projects…" autocomplete="off" oninput="search(this.value)" onfocus="search(this.value)">
       <div id="qres" class="qres" hidden></div>
     </div>
-    <select id="fy" class="fy" onchange="FY=this.value;render()" aria-label="Year (January – December)"></select>
+    <div id="fy" class="fy" role="group" aria-label="Period: year and month"></div>
     <div class="newwrap">
       <button id="newbtn" class="btn primary" onclick="toggleNew(event)"><span class="plus">+</span><span class="lbl">New</span></button>
       <div id="newmenu" class="menu" hidden></div>

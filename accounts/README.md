@@ -104,3 +104,24 @@ The portal is an installable app (PWA) – one code base for Android, iPhone, Wi
 - **Windows / Mac (Chrome or Edge)**: click the install icon at the right of the address bar, or menu → *Install NanoFly Accounts*. It gets its own window, Start-menu / Dock icon.
 - When you upload changed files later, raise `VERSION` at the top of `sw.js` so every device picks them up.
 - Need store packages (Play Store APK / Microsoft Store)? Put the https address into pwabuilder.com – it builds them from this same app.
+
+## Version 5 – work tracker, team payments, investor payouts, Hands-On Money
+- **Work tracker** (new menu item): *Tasks* = work done (your old SIT / Lajiba / Works Payment logs), *Team payments* = how it was paid, *By member* = tasks, unpaid, task-based, weekly and other payments per person.
+- **Two ways to pay the team** – nothing forces one model on everyone:
+  - **Task-based**: Tasks → *Pay task* (or New → Team payment → Task-based). One payment, linked to one task; the task shows *Paid · task* and the amount.
+  - **Weekly**: *Weekly payment* → choose the member and week (Mon–Sun, filled in for you). Their unpaid tasks for that week are listed and ticked; untick any, or untick all – ticking is optional. Ticked tasks show *Paid · weekly*. One amount for the week.
+  - Every payment has a **Reason** (Specialized Task, Weekly Work Payment, Additional Work, Overtime, Urgent Work, Performance / Incentive, Advance Payment, Correction / Adjustment, Other → type the reason), a status (Paid / Pending), payment date and period.
+  - Paid team payments are project costs: to the payment's project if you set one, otherwise split over the projects of the ticked tasks. A payment with neither (e.g. an advance) is a company-level cost.
+  - Old *Team* amounts in Project costs (from Spent Details) stay as they are. Record new team payments in the Work tracker, not as project costs, so nothing is counted twice.
+- **Investor payouts** (Team → Investor payouts, and Reports → Investor payouts): one *payout structure* per investor – investment amount, structure (Profit share / Fixed return % / Fixed amount / Manual), rate, payout period (monthly, quarterly…), start/end, status, notes. Shows payable, paid, pending, last payment date and status. *Pay* records a payout with the pending amount filled in. Investors on projects without a structure still appear (profit share).
+- **Hands-On Money** on the dashboard: Overall, the year and the month, side by side (tap one to switch). Formula (same as the Hands-on column in your old sheet, extended to company money):
+  received from clients − project costs − team payments − company running expenses − assets paid from the project fund − investor payouts.
+  Also shown in Reports → Financial summary, and per project (*Hands-on* column in Projects).
+- **Period filter everywhere**: Year (All years / 2026 / 2025…) + Month (Whole year / Jan…Dec). Lists use the box in the top bar; Reports has its own at the top of every report; the dashboard opens on the current month and has *All years* too.
+- **Reports**: Financial summary (with year-by-year or month-by-month table), Team payments, Work tracker, Expenses, Investor payouts, Health check, Activity log.
+
+### Updating to version 5
+1. Paste the new `apps-script/Code.gs` into Apps Script → Save → Deploy → Manage deployments → Edit → **New version**.
+2. Upload the whole portal folder (replace the old files).
+3. Log in once. The first load adds the `App_TeamPay` and `App_InvestorPlans` sheets and six columns at the end of `App_Payouts` (`Member`, `FromDate`, `ToDate`, `Payable`, `Status`, `Plan`). Nothing existing moves; old payouts count as Paid.
+4. Team → Investor payouts → *Add structure* for each investor.
