@@ -1,7 +1,7 @@
 /* NanoFly Accounts – service worker: makes the portal installable and opens instantly.
    Your data always comes live from the Google Sheet (Apps Script calls are never cached).
    Bump VERSION whenever you upload changed files so every phone / computer picks them up. */
-const VERSION = 'nf-accounts-v5.1';
+const VERSION = 'nf-accounts-v5.5';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './css/styles.css', './css/documents.css', './css/brand-fonts.css',
   './js/config.js', './js/app.js', './js/documents.js', './js/share-doc.js',

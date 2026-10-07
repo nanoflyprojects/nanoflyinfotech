@@ -30,19 +30,19 @@ const IC={
 };
 const ico=(k,cls='icon')=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[k]||''}</svg>`;
 const NAV=[['dashboard','Dashboard','home'],['clients','Clients','users'],['organizations','Organization','building'],['projects','Projects','folder'],['work','Work tracker','task'],['team','Team','team'],['invoices','Invoices','invoice'],['quotations','Quotations','quote'],['payments','Payments','wallet'],['expenses','Expenses','out'],['reports','Reports','chart'],['settings','Settings','gear']];
-const TITLES={dashboard:'Dashboard',clients:'Clients',client:'Client',organizations:'Organization',organization:'Organization',projects:'Projects',work:'Work tracker & team pay',team:'Team',member:'Team member',invoices:'Invoices',quotations:'Quotations',payments:'Payments & receipts',expenses:'Expenses',reports:'Reports',settings:'Settings'};
+const TITLES={dashboard:'Dashboard',clients:'Clients',client:'Client',organizations:'Organization',organization:'Organization',projects:'Projects',project:'Project',work:'Work tracker & team pay',team:'Team',member:'Team member',invoices:'Invoices',quotations:'Quotations',payments:'Payments & receipts',expenses:'Expenses',reports:'Reports',settings:'Settings'};
 
 const PAYTYPES=['Task-Based','Weekly'];
 const REASONS=['Specialized Task','Weekly Work Payment','Additional Work','Overtime','Urgent Work','Performance / Incentive','Advance Payment','Correction / Adjustment','Other'];
 const STRUCTS=['Profit share','Fixed return %','Fixed amount','Manual'];
 const FREQS=['Monthly','Quarterly','Half-yearly','Yearly','One-time','Per project'];
-const OPTS={Category:['Meta Ads','Google Ads','SEO & Maintenance','Team','Hosting/Domain','Other'],Platform:['Google','Meta'],Kind:['Expense','Asset'],Mode:['UPI','GPay','Bank Transfer','Cash','Cheque'],Investor:['Investor 1','Investor 2'],Result:['Running','Completed','Killed'],Type:['Social Media','Website','Ads Campaign','SEO','Training','Other'],
+const OPTS={Category:['Meta Ads','Google Ads','SEO & Maintenance','Team','Hosting/Domain','Other'],Platform:['Google','Meta'],Kind:['Expense','Asset'],IsInvestor:['Yes','No'],Mode:['UPI','GPay','Bank Transfer','Cash','Cheque'],Investor:['Investor 1','Investor 2'],Result:['Running','Completed','Killed'],Type:['Social Media','Website','Ads Campaign','SEO','Training','Other'],
   PayType:PAYTYPES,Reason:REASONS,Structure:STRUCTS,Frequency:FREQS};
 const STATUS={Projects:['Active','Completed','On Hold','Cancelled'],Content:['Pending','Paid'],TeamPay:['Paid','Pending'],Payouts:['Paid','Partly paid','Pending'],InvestorPlans:['Active','Closed']};
 const DOCSTATUS={Invoice:['Issued','Cancelled'],Quotation:['Draft','Sent','Accepted','Rejected']};
 const ORG_COLS=['ID','Name','Client','BillingName','Contact','Phone','Email','Website','City','GSTIN','Address','Notes'];
 const NUMK=['Budget','HandsOn','Inv1Pct','Amount','GST','Total','Rate','Investment','Payable'];
-const LABEL={Investor1:'Investor 1 (team member)',Investor2:'Investor 2 (team member)',JoinDate:'Joined on',Role:'Role / designation',HandsOn:'Hands-on (team share)',Inv1Pct:'Investor 1 share %',PaidTo:'Paid to',DesignedBy:'Designed by',AdSet:'Ad set',PaymentDate:'Payment date',StartDate:'Start date',EndDate:'End date',PaidFor:'Paid for',Rate:'Rate (₹)',GST:'GST 18%',
+const LABEL={IsInvestor:'Is an investor? (can hold project shares and get payouts)',FundProject:'Project fund of',PaidBy:'Paid by',Investor1:'Investor 1 (team member)',Investor2:'Investor 2 (team member)',JoinDate:'Joined on',Role:'Role / designation',HandsOn:'Hands-on (team share)',Inv1Pct:'Investor 1 share %',PaidTo:'Paid to',DesignedBy:'Designed by',AdSet:'Ad set',PaymentDate:'Payment date',StartDate:'Start date',EndDate:'End date',PaidFor:'Paid for',Rate:'Rate (₹)',GST:'GST 18%',
   BillingName:'Billing name on documents (Enter = new line)',GSTIN:'GSTIN',InvoiceNo:'Against invoice',ReceiptNo:'Receipt no.',No:'No.',ValidDate:'Valid till',Budget:'Project value (₹)',Amount:'Amount (₹)',Total:'Total (₹)',Name:'Client name (short)',Project:'Project name',Kind:'Type (an Asset is not deducted from profit)',FundedBy:'Settled by (for assets)',OldNo:'Old number',OldReceiptNo:'Old receipt no.',FromDate:'Period from',ToDate:'Period to',Payable:'Amount payable (₹)',Investment:'Investment amount (₹)',InvestDate:'Invested on',Structure:'Payout / return structure',Frequency:'Payout period',PayType:'Payment type',Member:'Team member',ReasonOther:'Reason (type it)'};
 /* labels that differ per sheet */
 const FLABEL={Payouts:{Member:'Investor',Plan:'Payout structure',Project:'Project (for profit-share payouts)',Amount:'Amount paid (₹)',Date:'Payment date',Payable:'Amount payable for this period (₹)',Status:'Payment status'},
@@ -69,8 +69,37 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const perLabel=p=>!p||p==='all'?'All time':p.length===4?p+' (Jan – Dec)':monthName(p);
 const iso=x=>new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const adm=()=>ROLE==='admin';
-const isAsset=e=>/^asset/i.test(String(e.Kind||''));     // company assets (domain, laptop…) are paid by investors / project fund, never deducted from profit
-const opEx=a=>a.filter(e=>!isAsset(e));
+const isAsset=e=>/^asset/i.test(String(e.Kind||''));     // legacy rows only – there is one kind of company expense now
+const isYes=v=>/^y/i.test(String(v||''));
+/* Who covered a company expense:
+   Company (hands-on money) · Project fund (charged to that project) · Investors (own pocket – one investor, or shared equally).
+   Old rows: blank = Company · "Project fund" · "Investors (shared)" or a member's name = Investors · an old asset with nobody named = Not set */
+function cover(e){
+  const f=String(e.FundedBy||'').trim(),who=String(e.PaidBy||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(/project fund/i.test(f))return {Type:'Project fund',Who:[]};
+  if(/^company/i.test(f)||(!f&&!isAsset(e)))return {Type:'Company',Who:[]};
+  if(!f)return {Type:'Not set',Who:[]};
+  if(/^investors?\b/i.test(f))return {Type:'Investors',Who:who};
+  return {Type:'Investors',Who:who.length?who:[f]};
+}
+const expCo=a=>a.filter(e=>cover(e).Type==='Company'),expFund=a=>a.filter(e=>cover(e).Type==='Project fund'),expInv=a=>a.filter(e=>cover(e).Type==='Investors');
+const opEx=a=>a.filter(e=>{const t=cover(e).Type;return t==='Company'||t==='Project fund'});   // money that leaves the company
+function coverText(e){const c=cover(e),a=+e.Amount||0;
+  if(c.Type==='Company')return 'Company money';
+  if(c.Type==='Project fund')return 'Project fund'+((e.FundProject||e.Project)?' · '+(e.FundProject||e.Project):'');
+  if(c.Type==='Investors')return !c.Who.length?'Investors (shared)':c.Who.length===1?'Paid by '+c.Who[0]:'Shared: '+c.Who.join(', ')+' ('+inr(a/c.Who.length)+' each)';
+  return 'Not set'}
+const expRow=e=>({...e,Cover:cover(e),ForTxt:e.Project||'In-house',By:coverText(e)});
+/* an expense counts against a project's cost: the project whose fund paid it, otherwise the project it was for */
+const chargeTo=e=>cover(e).Type==='Project fund'?(e.FundProject||e.Project):e.Project;
+function cexpAlloc(){return D.CompanyExp.map(e=>{const pj=chargeTo(e),a=+e.Amount||0;
+  return pj&&a?{ID:'ce-'+e.ID,Date:e.Date,Project:pj,Category:'Company expense',PaidTo:e.Reason||e.PaidTo||'',Amount:a}:null}).filter(Boolean)}
+/* only team members marked as investors (plus anyone already holding project shares / a payout structure) */
+function investorNames(){
+  const flag=(SCHEMA.Team||[]).includes('IsInvestor'),base=flag?D.Team.filter(t=>isYes(t.IsInvestor)):D.Team;
+  return [...new Set(base.map(t=>t.Name).concat(D.Projects.flatMap(p=>[p.Investor1,p.Investor2]),D.InvestorPlans.map(x=>x.Investor)).map(x=>String(x||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+const isInvestorName=n=>investorNames().includes(n);
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
 /* Period picker: Year (All years / 2026 / 2025…) + Month (Whole year / Jan…Dec). fn = setFY or setDash */
 function perYears(){
@@ -219,22 +248,22 @@ function teamAlloc(){
 }
 
 /* ---------- Hands-On Money: cash the company actually holds ----------
-   Received from clients − project costs − team payments − company running expenses − assets paid from the project fund − investor payouts.
+   Received from clients − project costs − team payments − company expenses − expenses paid from project funds − investor payouts.
    Same formula as the "Hands-on" column of the old sheet (Received − Spent − investor shares paid), extended to company-level money. */
 const paidPO=x=>x.Status!=='Pending';
 function handsOn(p){
   const f=r=>inPer(r,p);
   const rec=sum(D.Payments.filter(f),'Amount'),proj=sum(D.Expenses.filter(f),'Amount'),team=sum(D.TeamPay.filter(paidTP).filter(f),'Amount');
-  const comp=sum(opEx(D.CompanyExp).filter(f),'Amount'),fund=sum(D.CompanyExp.filter(isAsset).filter(a=>/project fund/i.test(a.FundedBy||'')).filter(f),'Amount');
+  const comp=sum(expCo(D.CompanyExp).filter(f),'Amount'),fund=sum(expFund(D.CompanyExp).filter(f),'Amount');
   const inv=sum(D.Payouts.filter(paidPO).filter(f),'Amount');
   return {rec,proj,team,comp,fund,inv,net:rec-proj-team-comp-fund-inv};
 }
-function hoRows(H){return [['Received from clients',H.rec,1],['Project costs',H.proj],['Team payments',H.team],['Company running expenses',H.comp],['Assets paid from the project fund',H.fund],['Investor payouts',H.inv]].filter(r=>r[2]||r[1])
+function hoRows(H){return [['Received from clients',H.rec,1],['Project costs',H.proj],['Team payments',H.team],['Company expenses (company money)',H.comp],['Expenses paid from project funds',H.fund],['Investor payouts',H.inv]].filter(r=>r[2]||r[1])
   .map(([l,v,plus])=>`<tr><td>${plus?'':'− '}${l}</td><td class="n">${inr(v)}</td></tr>`).join('')+`<tr class="tot"><td>Hands-On Money</td><td class="n ${H.net<0?'due':'in'}">${inr(H.net)}</td></tr>`}
 
 function calc(){
   const by=a=>a.reduce((m,x)=>{(m[x.Project]=m[x.Project]||[]).push(x);return m},{});
-  const pay=by(D.Payments),exp=by(D.Expenses.concat(teamAlloc())),po=by(D.Payouts.filter(paidPO)),ad=by(D.Ads);
+  const pay=by(D.Payments),exp=by(D.Expenses.concat(teamAlloc(),cexpAlloc())),po=by(D.Payouts.filter(paidPO)),ad=by(D.Ads);
   return D.Projects.map(p=>{
     const rec=sum(pay[p.Project]||[],'Amount'),sp=sum(exp[p.Project]||[],'Amount'),ho=+p.HandsOn||0;
     const pct=p.Inv1Pct===''?75:+p.Inv1Pct,profit=rec-sp-ho,bal=(+p.Budget||0)-rec,pos=po[p.Project]||[];
@@ -256,7 +285,8 @@ function parseRoute(){
   if(R.v==='client'){R.p=h.slice(1).join('/');R.t=''}
   if(R.v==='organization'){R.p=h.slice(1).join('/');R.t=''}
   if(R.v==='member'){R.p=h.slice(1).join('/');R.t=''}
-  const ok=['dashboard','clients','client','organizations','organization','projects','work','team','member','invoices','quotations','payments','expenses','reports','settings'];
+  if(R.v==='project'){R.p=h.slice(1).join('/');R.t=''}
+  const ok=['dashboard','clients','client','organizations','organization','projects','project','work','team','member','invoices','quotations','payments','expenses','reports','settings'];
   if(!ok.includes(R.v))R.v='dashboard';
   if(R.v==='settings'&&!adm())R.v='dashboard';
   if(ROLE==='team')R.v='team';                 // team logins only ever see their own Team page
@@ -270,18 +300,18 @@ function render(){
   charts.forEach(c=>c.destroy());charts=[];MENUS=[];LISTS=[];
   const due=docs('Invoice').map(invCalc).filter(d=>d.State==='Overdue').length;
   const navs=ROLE==='team'?NAV.filter(n=>n[0]==='team'):NAV.filter(n=>n[0]!=='settings'||adm());
-  $('nav').innerHTML=navs.map(([k,l,i])=>`<a href="#${k}" class="${(R.v===k||(R.v==='client'&&k==='clients')||(R.v==='organization'&&k==='organizations')||(R.v==='member'&&k==='team'))?'on':''}">${ico(i)}<span>${ROLE==='team'&&k==='team'?'My projects':l}</span>${k==='invoices'&&due?`<em class="count">${due}</em>`:''}</a>`).join('');
+  $('nav').innerHTML=navs.map(([k,l,i])=>`<a href="#${k}" class="${(R.v===k||(R.v==='client'&&k==='clients')||(R.v==='organization'&&k==='organizations')||(R.v==='project'&&k==='projects')||(R.v==='member'&&k==='team'))?'on':''}">${ico(i)}<span>${ROLE==='team'&&k==='team'?'My projects':l}</span>${k==='invoices'&&due?`<em class="count">${due}</em>`:''}</a>`).join('');
   const tb=ROLE==='team'?[['team','My projects','team']]:[['dashboard','Home','home'],['clients','Clients','users'],['invoices','Invoices','invoice'],['payments','Payments','wallet']];
   $('tabbar').innerHTML=tb.map(([k,l,i])=>`<a href="#${k}" class="${(R.v===k||(R.v==='client'&&k==='clients'))?'on':''}">${ico(i)}${l}</a>`).join('')+
-    `<button class="${['organizations','organization','projects','work','team','member','quotations','expenses','reports','settings'].includes(R.v)?'on':''}" onclick="moreSheet()">${ico('more')}More</button>`;
-  const pageT=(R.v==='client'||R.v==='organization'||R.v==='member')?R.p:(ROLE==='team'?'My projects':TITLES[R.v]);
+    `<button class="${['organizations','organization','projects','project','work','team','member','quotations','expenses','reports','settings'].includes(R.v)?'on':''}" onclick="moreSheet()">${ico('more')}More</button>`;
+  const pageT=(R.v==='client'||R.v==='organization'||R.v==='member'||R.v==='project')?R.p:(ROLE==='team'?'My projects':TITLES[R.v]);
   $('ptitle').textContent=pageT;
   // period filter (All / Year / Month) for lists; the dashboard and reports carry their own picker
   $('fy').innerHTML=ROLE==='team'?'':perPicker(FY,'setFY');
   $('fy').style.display=['dashboard','reports','settings','client','organization'].includes(R.v)||ROLE==='team'?'none':'';
   document.title=pageT+' – NanoFly InfoTech Accounts';
   buildNewMenu();
-  ({dashboard,clients,client:clientPage,organizations,organization:organizationPage,projects,work,team,member:memberRoute,invoices,quotations,payments,expenses,reports,settings})[R.v]();
+  ({dashboard,clients,client:clientPage,organizations,organization:organizationPage,projects,project:projectPage,work,team,member:memberRoute,invoices,quotations,payments,expenses,reports,settings})[R.v]();
 }
 function moreSheet(){
   openSheet('More',`<div class="quick full">${(ROLE==='team'?[]:[['organizations','Organization','building'],['projects','Projects','folder'],['work','Work tracker','task'],['team','Team','team'],['quotations','Quotations','quote'],['expenses','Expenses','out'],['reports','Reports','chart']]).concat(adm()?[['settings','Settings','gear']]:[]).map(([k,l,i])=>`<button onclick="closeM();go('${k}')">${ico(i)}${l}</button>`).join('')}
@@ -290,7 +320,7 @@ function moreSheet(){
 }
 function buildNewMenu(){
   $('newbtn').parentElement.hidden=!adm();
-  $('newmenu').innerHTML=[['invoice','Invoice',"newDoc('Invoice')"],['wallet','Payment received',"edit('Payments')"],['quote','Quotation',"newDoc('Quotation')"],['users','Client',"edit('Clients')"],['building','Organization',"edit('Organizations')"],['folder','Project',"edit('Projects')"],['out','Project expense',"edit('Expenses')"],['out','Company expense',"edit('CompanyExp',null,{Kind:'Expense'},'Add company expense')"],['building','Company asset',"newAsset()"],
+  $('newmenu').innerHTML=[['invoice','Invoice',"newDoc('Invoice')"],['wallet','Payment received',"edit('Payments')"],['quote','Quotation',"newDoc('Quotation')"],['users','Client',"edit('Clients')"],['building','Organization',"edit('Organizations')"],['folder','Project',"edit('Projects')"],['out','Project expense',"edit('Expenses')"],['out','Company expense',"edit('CompanyExp')"],
     ['task','Work item (task)',"edit('Content')"],['coins','Team payment',"payTeam()"],['team','Investor payout',"edit('Payouts')"]]
     .map(([i,l,f])=>`<button onclick="closeMenus();${f}">${ico(i)}${l}</button>`).join('');
 }
@@ -308,7 +338,7 @@ function search(q){
   const hit=s=>String(s||'').toLowerCase().includes(q),res=[];
   clientNames().forEach(n=>{const c=clientOf(n);if(hit(n)||hit(c.BillingName)||hit(c.Phone))res.push([`client/${n}`,n,'Client'])});
   orgNames().forEach(n=>{const o=orgOf(n);if(hit(n)||hit(o.BillingName)||hit(o.Phone)||hit(o.Contact))res.push([`organization/${n}`,n,'Organization'+(o.Client?' · '+o.Client:'')])});
-  D.Projects.forEach(p=>{if(hit(p.Project))res.push([`client/${p.Client}`,p.Project,'Project · '+p.Client])});
+  D.Projects.forEach(p=>{if(hit(p.Project))res.push([`project/${p.Project}`,p.Project,'Project · '+(p.Client||'In-house')])});
   D.Docs.forEach(d=>{if(hit(d.No)||hit(d.Client)||items(d).some(i=>hit(i.title)))res.push([d.Type==='Invoice'?'invoices':'quotations',`${d.No} – ${d.Client}`,d.Type+' · '+inr(d.Total),d.ID])});
   D.Payments.forEach(p=>{if(hit(p.ReceiptNo)||hit(p.InvoiceNo)||String(p.Amount)===q.replace(/[₹,\s]/g,''))res.push(['payments',`${inr(p.Amount)} on ${fmtD(p.Date)}`,'Payment · '+payClient(p)])});
   box.innerHTML=res.length?res.slice(0,14).map(([h,t,s,id])=>`<a href="#${esc(h)}" onclick="closeMenus();$('q').value='';${id?`setTimeout(()=>printDoc('${id}'),50)`:''}"><span>${esc(t)}</span><small>${esc(s)}</small></a>`).join(''):'<p>No matches.</p>';
@@ -365,7 +395,7 @@ function dashboard(){
   const P=calc().filter(inM),billed=sum(P,'Budget'),got=sum(P,'Received'),due=Math.max(0,billed-got);
   const PAY=D.Payments.filter(inM).map(p=>({...p,Client:payClient(p)})),rec=sum(PAY,'Amount');
   const TP=D.TeamPay.filter(inM),tp=sum(TP.filter(paidTP),'Amount'),tpPend=sum(TP.filter(p=>!paidTP(p)),'Amount');
-  const pex=sum(D.Expenses.filter(inM),'Amount'),ho=sum(P,'HandsOn'),co=sum(opEx(D.CompanyExp.filter(inM)),'Amount'),assets=sum(D.CompanyExp.filter(inM).filter(isAsset),'Amount');
+  const pex=sum(D.Expenses.filter(inM),'Amount'),ho=sum(P,'HandsOn'),co=sum(opEx(D.CompanyExp.filter(inM)),'Amount'),assets=sum(expInv(D.CompanyExp.filter(inM)),'Amount');
   const cost=pex+tp+ho+co,net=rec-cost;
   const PO=D.Payouts.filter(inM),poPaid=sum(PO.filter(paidPO),'Amount');
   const INVm=docs('Invoice').filter(inM).map(invCalc).filter(d=>d.State!=='Cancelled');
@@ -408,7 +438,7 @@ function dashboard(){
   <div class="stats">
     ${stat('Received '+perS,inr(rec),'in',`${PAY.length} payment${PAY.length===1?'':'s'}${rec!==got?' · incl. earlier work':''}`)}
     ${stat('Costs '+perS,inr(cost),'',`${inr(pex+ho)} project · ${inr(tp)} team · ${inr(co)} company`)}
-    ${stat('Net profit '+perS,inr(net),net<0?'due':'in',assets?`${inr(assets)} assets not deducted`:'received minus costs')}
+    ${stat('Net profit '+perS,inr(net),net<0?'due':'in',assets?`${inr(assets)} paid by investors, not deducted`:'received minus costs')}
     ${stat('Invoiced '+perS,inr(sum(INVm,'Total')),'',`${INVm.length} invoice${INVm.length===1?'':'s'} · ${inr(sum(INVm,'Balance'))} unpaid`)}
     ${stat('Team payments '+perS,inr(tp),'',`${TP.filter(paidTP).length} paid${tpPend?' · '+inr(tpPend)+' pending':''}`)}
     ${stat('Investor payouts '+perS,inr(poPaid),'',invDue>1?inr(invDue)+' pending overall':'nothing pending')}
@@ -543,9 +573,9 @@ function organizationPage(){
 /* ---------- Projects ---------- */
 function projTable(P){
   return table(P,[['Project','Project','text',{sub:'Client'}],['Date','Started','date'],['Budget','Value','money'],['Received','Received','money'],['Balance','To collect','money'],['Profit','Profit','money'],['HandsOnMoney','Hands-on','money'],['Status','Status','pill']],
-    {total:['Budget','Received','Balance','Profit','HandsOnMoney'],act:r=>(adm()&&r.Balance>0?`<button class="btn sm" onclick="payFor('${r.ID}')">${ico('wallet')}Payment</button>`:'')+more([
+    {total:['Budget','Received','Balance','Profit','HandsOnMoney'],href:r=>'project/'+r.Project,act:r=>(adm()&&r.Balance>0?`<button class="btn sm" onclick="payFor('${r.ID}')">${ico('wallet')}Payment</button>`:'')+more([
       adm()?['Create invoice',`invFromProject('${r.ID}')`]:null,r.Balance>0?['WhatsApp reminder',`remind('${r.ID}')`]:null,adm()?['Repeat next month',`repeatProject('${r.ID}')`]:null,
-      ['Open client',`go(${js('client/'+r.Client)})`],adm()?['Edit',`edit('Projects','${r.ID}')`]:null,adm()?['Delete',`del('Projects','${r.ID}')`]:null]),
+      ['Open project',`go(${js('project/'+r.Project)})`],r.Client?['Open client',`go(${js('client/'+r.Client)})`]:null,adm()?['Edit',`edit('Projects','${r.ID}')`]:null,adm()?['Delete',`del('Projects','${r.ID}')`]:null]),
      empty:'No projects here.'});
 }
 function projects(){
@@ -724,13 +754,13 @@ function team(){
   if(!TEAM_OK){main('<div class="notice"><b>Update the Apps Script backend to use Team.</b><br>Paste the new <code>apps-script/Code.gs</code>, then Deploy → Manage deployments → Edit → New version. Nothing in your sheet is moved or deleted.</div>');return}
   const TT=[['members','Members'],['payouts','Investor payouts']];
   if(R.p==='payouts'){main(tabs('team',TT,'payouts')+(PAY_OK?'':noPayBackend().replace('Team payments','Investor payout structures'))+investorView(FY));return}
-  const rows=D.Team.map(t=>{const m=memberRows(t.Name);return {...t,Projects:m.length,Active:m.filter(p=>p.Status==='Active').length,Share:sum(m,'MyShare'),Paid:sum(m,'MyPaid'),Due:sum(m,'MyDue')}}).sort((a,b)=>a.Name.localeCompare(b.Name));
+  const rows=D.Team.map(t=>{const m=memberRows(t.Name);return {...t,Inv:isInvestorName(t.Name)?'Investor':'',Projects:m.length,Active:m.filter(p=>p.Status==='Active').length,Share:sum(m,'MyShare'),Paid:sum(m,'MyPaid'),Due:sum(m,'MyDue')}}).sort((a,b)=>a.Name.localeCompare(b.Name));
   const open=calc().filter(inFY).filter(p=>!p.Investor1&&!p.Investor2&&p.Status!=='Cancelled');
   main(tabs('team',TT,'members')+`<div class="stats">${stat('Team members',rows.length)}${stat('Profit share earned',inr(sum(rows,'Share')))}${stat('Paid out',inr(sum(rows,'Paid')),'in')}${stat('Still to pay out',inr(sum(rows,'Due')),sum(rows,'Due')>0?'due':'')}</div>
   ${open.length?`<div class="notice"><b>${open.length} project${open.length>1?'s have':' has'} no investor assigned.</b> Their profit share will not show on anyone's Team page. Open the project → Edit → choose Investor 1 / Investor 2. <button class="btn sm" onclick="go('projects')">Open projects</button></div>`:''}
   <section class="panel"><div class="panel-head"><h2>Members</h2><input class="filter" style="max-width:220px" type="search" placeholder="Filter" oninput="filt(this)">${adm()?`<button class="btn primary" onclick="edit('Team')">${ico('plus')}Add member</button>`:''}</div>
-  <p class="muted" style="margin-top:-4px">Each member sees only the projects where they are Investor 1 or Investor 2. Open a member to see exactly what they see.</p>
-  ${table(rows,[['Name','Member','text',{sub:r=>[r.Role,r.Phone].filter(Boolean).join(' · ')}],['Projects','Projects','num'],['Share','Profit share','money'],['Paid','Paid out','money',{color:'in'}],['Due','To pay out','money']],
+  <p class="muted" style="margin-top:-4px">Each member sees only the projects where they are Investor 1 or Investor 2. Open a member to see exactly what they see. <b>Only members marked “Is an investor? = Yes”</b> (Edit) can be chosen as investors and appear under Investor payouts.</p>
+  ${table(rows,[['Name','Member','text',{sub:r=>[r.Role,r.Phone].filter(Boolean).join(' · ')}],['Inv','Investor','pill'],['Projects','Projects','num'],['Share','Profit share','money'],['Paid','Paid out','money',{color:'in'}],['Due','To pay out','money']],
     {total:['Share','Paid','Due'],href:r=>'member/'+r.Name,empty:'No team members yet. Add one, then choose them as Investor 1 / Investor 2 on a project.',
      act:r=>`<button class="btn sm" onclick="go(${js('member/'+r.Name)})">Open</button>`+(adm()?more([['Edit',`edit('Team','${r.ID}')`],['Create login',`editUser(null,{role:'team',member:${js(r.Name)}})`],['Delete',`del('Team','${r.ID}')`]]):'')})}
   </section>`);
@@ -742,6 +772,10 @@ function memberPage(name){
   const T=t||{Name:name},P=memberRows(name);
   const share=sum(P,'MyShare'),paid=sum(P,'MyPaid'),due=share-paid,ph=T.Phone;
   const hasPlans=D.InvestorPlans.some(x=>x.Investor===name)||D.Payouts.some(x=>x.Member===name&&!x.Project);
+  const cov=D.CompanyExp.filter(inFY).map(e=>({e,c:cover(e)})).filter(x=>x.c.Type==='Investors'&&x.c.Who.includes(name)).map(({e,c})=>{const k=+e.Sharers||c.Who.length||1,tot=+e.Amount||0;
+    return {...e,ForTxt:e.Project||'In-house',Split:k>1?'Shared by '+k:'Paid fully',Total:tot,Mine:tot/k}}).sort((x,y)=>String(y.Date).localeCompare(x.Date));
+  const covSec=(cov.length||!self)?`<h2 style="margin:22px 0 12px">${self?'Expenses you covered':'Expenses '+esc(name)+' covered'}</h2><section class="panel"><div class="stats" style="margin:0 0 10px">${stat(self?'You paid':'Paid by '+esc(name),inr(sum(cov,'Mine')),'',`${cov.length} expense${cov.length===1?'':'s'} · from ${self?'your':'their'} own pocket, not deducted from company money`)}</div>
+    ${table(cov,[['Reason','Expense','text',{sub:r=>[r.PaidFor,r.PaidTo&&'Paid to '+r.PaidTo].filter(Boolean).join(' · ')}],['Date','Date','date'],['ForTxt','For'],['Split','Split'],['Total','Expense total','money'],['Mine',self?'Your share':'Their share','money',{color:'in'}]],{total:['Total','Mine'],empty:'No expenses covered in this period.'})}</section>`:'';
   const link=(href,i,l)=>`<a class="btn sm" href="${esc(href)}" target="_blank" rel="noopener">${ico(i)}${l}</a>`;
   main(`${self?'':`<a class="back" href="#team">${ico('back')}All team</a>`}
   <div class="chead"><div class="avatar">${esc((name[0]||'?').toUpperCase())}</div>
@@ -753,6 +787,7 @@ function memberPage(name){
   ${table(P,[['Project','Project','text',{sub:r=>r.Client+' · '+fmtD(r.Date)}],['Status','Status','pill'],['Budget','Value','money'],['Received','Received','money',{color:'in'}],['Profit','Profit','money'],['MyPct',self?'Your %':'Share %','pct'],['MyShare','Share','money'],['MyPaid','Paid','money',{color:'in'}],['MyDue','Due','money']],
     {total:['Budget','Received','Profit','MyShare','MyPaid','MyDue'],empty:self?'No projects are assigned to you yet. Please ask the admin.':'No projects assigned yet. Open a project → Edit → set Investor 1 / Investor 2.',
      act:r=>`<button class="btn sm" onclick="teamProject('${r.ID}',${js(name)})">Details</button>`})}</section>
+  ${covSec}
   <h2 style="margin:22px 0 12px">${self?'Your investment and payouts':'Investment and payouts'}</h2>
   ${investorView(FY,{member:name,readonly:self,noStats:!hasPlans})}`);
 }
@@ -760,7 +795,7 @@ function teamProject(id,name){
   const p=calc().find(x=>x.ID===id);if(!p)return;
   const k=stake(p,name),self=ROLE==='team',slots=slotsOf(p,name);
   const pays=D.Payments.filter(x=>x.Project===p.Project).sort((a,b)=>String(b.Date).localeCompare(a.Date));
-  const exps=D.Expenses.concat(teamAlloc()).filter(x=>x.Project===p.Project).sort((a,b)=>String(b.Date).localeCompare(a.Date));
+  const exps=D.Expenses.concat(teamAlloc(),cexpAlloc()).filter(x=>x.Project===p.Project).sort((a,b)=>String(b.Date).localeCompare(a.Date));
   const pos=D.Payouts.filter(x=>x.Project===p.Project&&paidPO(x)&&slots.includes(x.Investor)).sort((a,b)=>String(b.Date).localeCompare(a.Date));
   openSheet(p.Project,`<div class="full">
     <div class="muted" style="margin-bottom:12px">${esc([p.Client,p.Type,p.Organization,'Started '+fmtD(p.Date)].filter(Boolean).join(' · '))} <span class="pill ${PILL[p.Status]??''}">${esc(p.Status)}</span></div>
@@ -770,6 +805,70 @@ function teamProject(id,name){
     <h3 style="margin-top:18px">Project costs</h3>${table(exps,[['Date','Date','date'],['Category','Category','text',{sub:'PaidTo'}],['Amount','Amount','money']],{total:['Amount'],empty:'No costs recorded.'})}
     <h3 style="margin-top:18px">Payouts ${self?'to you':'to '+esc(name)}</h3>${table(pos,[['Date','Date','date'],['Notes','Notes'],['Amount','Amount','money',{color:'in'}]],{total:['Amount'],empty:'No payouts recorded yet.'})}
   </div>`,null,'Save',true);
+}
+
+/* ---------- Project page: status, every cost, payments, investors, work ---------- */
+async function projStatus(id,st){const r=D.Projects.find(x=>x.ID===id);if(!r)return;try{await api('saveRow',TOKEN,'Projects',{...r,Status:st});toast('Project marked '+st.toLowerCase());await load()}catch(e){alert(e.message||e)}}
+function projectPage(){
+  const n=R.p,p=calc().find(x=>x.Project===n);
+  if(!p){main(`<a class="back" href="#projects">${ico('back')}All projects</a><div class="empty">There is no project called ${esc(n)}.</div>`);return}
+  const nd=(a,k='Date')=>a.slice().sort((x,y)=>String(y[k]).localeCompare(x[k]));
+  const pays=nd(D.Payments.filter(x=>x.Project===n)),INV=docs('Invoice').filter(d=>d.Project===n).map(invCalc),tasks=nd(D.Content.filter(c=>c.Project===n)).map(c=>({...c,...taskPay(c)}));
+  const cx=D.CompanyExp.filter(e=>chargeTo(e)===n),other=D.CompanyExp.filter(e=>e.Project===n&&chargeTo(e)!==n),ho=+p.HandsOn||0;
+  const rows=nd([].concat(
+    D.Expenses.filter(x=>x.Project===n).map(x=>({...x,What:x.Category||'Project cost',Who:x.PaidTo,Src:'Project cost',Cat:x.Category||'Other',By:''})),
+    teamAlloc().filter(x=>x.Project===n).map(x=>({...x,What:'Team payment',Who:x.PaidTo,Src:'Team payment',Cat:'Team payments',By:''})),
+    cx.map(e=>({...e,What:e.Reason||'Company expense',Who:e.PaidTo,Src:'Company expense',Cat:'Company expense',By:coverText(e)})),
+    ho?[{ID:'ho',Date:p.Date,What:'Team share (set on the project)',Who:'',Src:'Team share',Cat:'Team share',By:'',Amount:ho}]:[]));
+  const cost=sum(rows,'Amount'),src=k=>sum(rows.filter(r=>r.Src===k),'Amount');
+  const split=['Company','Project fund','Investors','Not set'].map(k=>[k,sum(cx.filter(e=>cover(e).Type===k),'Amount')]).filter(x=>x[1]).map(([k,v])=>`${k==='Company'?'company money':k.toLowerCase()} ${inr(v)}`).join(' · ');
+  const pct=(a,b)=>b>0?Math.max(0,Math.min(100,Math.round(a/b*100))):0,bar=(v,c)=>`<div style="height:9px;background:#0001;border-radius:6px;overflow:hidden;margin:6px 0 2px"><i style="display:block;height:100%;width:${v}%;background:${c}"></i></div>`;
+  const names=[...new Set([p.Investor1,p.Investor2].filter(Boolean))],invs=names.map(nm=>({Name:nm,Role:slotsOf(p,nm).join(' + '),...stake(p,nm)}));
+  const shareT=sum(invs,'Share'),sharedT=sum(invs,'Paid'),dueT=sum(invs,'Due'),paidAll=p.Paid1+p.Paid2;
+  const A=adm(),ID=p.ID,ie=nd(D.CompanyExp.filter(e=>(e.Project===n||chargeTo(e)===n)&&cover(e).Type==='Investors')).map(expRow),po=nd(D.Payouts.filter(x=>x.Project===n)).map(x=>({...x,Who:poMember(x)||x.Investor||''}));
+  const alerts=[];
+  if(p.Balance>0&&p.Age>30&&p.Status==='Active')alerts.push(`The client still owes ${inr(p.Balance)} – ${p.Age} days since the project started.`);
+  if(p.Profit<0)alerts.push(`This project is at a loss of ${inr(-p.Profit)}.`);
+  if(!names.length&&p.Status!=='Cancelled')alerts.push('No investor is assigned – nobody gets a profit share. Edit the project and choose Investor 1 / Investor 2.');
+  if(p.AdTracked>p.AdBooked+1)alerts.push(`Ads tracked for this project: ${inr(p.AdTracked)}, but only ${inr(p.AdBooked)} is booked as a project cost.`);
+  if(p.Budget>0&&p.Received>p.Budget+1)alerts.push(`Received ${inr(p.Received-p.Budget)} more than the project value.`);
+  const L=(l,v,o={})=>`<tr class="${o.tot?'tot':''}"><td${o.sub?' style="padding-left:20px"':''}>${l}${o.note?`<div class="muted" style="font-size:12px;font-weight:400">${o.note}</div>`:''}</td><td class="n ${o.cls||''}">${v}</td></tr>`;
+  const jump=[['pj-money','Money'],['pj-inv','Investors'],['pj-spend','Spending'],['pj-pay','Payments'],['pj-work','Work']];
+  const sec=(id,title,body,head='')=>`<section class="panel mt" id="${id}"><div class="panel-head"><h2>${title}</h2>${head}</div>${body}</section>`;
+  main(`<a class="back" href="#projects">${ico('back')}All projects</a>
+  <div class="chead"><div class="avatar">${esc((n[0]||'?').toUpperCase())}</div>
+    <div><h2>${esc(n)} <span class="pill ${PILL[p.Status]??''}">${esc(p.Status)}</span></h2><div class="muted">${esc([p.Client||'In-house',p.Type,p.Organization,'Started '+fmtD(p.Date)].filter(Boolean).join(' · '))}</div>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">${jump.map(([id,l])=>`<a class="btn sm" href="javascript:void 0" onclick="document.getElementById('${id}').scrollIntoView({behavior:'smooth',block:'start'})">${l}</a>`).join('')}</div></div>
+    <div class="acts row">${A?`<button class="btn primary" onclick="edit('Payments',null,{Project:${js(n)}})">${ico('wallet')}Record payment</button><button class="btn" onclick="edit('CompanyExp',null,{Project:${js(n)}})">${ico('plus')}Expense</button>`:''}
+      ${more([A&&p.Status==='Active'?['Mark completed',`projStatus('${ID}','Completed')`]:null,A&&p.Status!=='Active'?['Mark active again',`projStatus('${ID}','Active')`]:null,A&&p.Status==='Active'?['Put on hold',`projStatus('${ID}','On Hold')`]:null,A?['Create invoice',`invFromProject('${ID}')`]:null,A&&p.Balance>0?['WhatsApp reminder',`remind('${ID}')`]:null,A?['Edit project',`edit('Projects','${ID}')`]:null,A?['Delete project',`del('Projects','${ID}')`]:null])}</div></div>
+  ${alerts.map(a=>`<div class="notice warn">${esc(a)}</div>`).join('')}
+  <div class="stats">${stat('Project value',inr(p.Budget))}${stat('Received',inr(p.Received),'in',p.Budget>0?pct(p.Received,p.Budget)+'% collected':'')}${stat('Balance to collect',inr(Math.max(0,p.Balance)),p.Balance>0?'due':'',p.Balance<0?inr(-p.Balance)+' received extra':p.Balance>0?'still to come from the client':'fully received')}${stat('Total spent',inr(cost),'',split?'incl. company: '+split:p.Received?pct(cost,p.Received)+'% of money received':'')}</div>
+  <div class="stats">${stat('Profit',inr(p.Profit),p.Profit<0?'due':'in',p.Margin+'% margin')}${stat('Hands-on money',inr(p.HandsOnMoney),p.HandsOnMoney<0?'due':'','received − costs − payouts')}${stat('Profit shares',inr(shareT),'',names.length?names.length+' investor'+(names.length>1?'s':''):'no investor')}${stat('Shared so far',inr(sharedT),'in',dueT>0?inr(dueT)+' still to pay out':shareT?'all paid out':'')}</div>
+  <div id="pj-money" class="grid2 mt"><section class="panel"><h2>Money statement</h2><table class="calc">
+    ${L('Project value',inr(p.Budget))}${L('Received from client',inr(p.Received),{cls:'in'})}${L('Balance still to collect',inr(Math.max(0,p.Balance)),{cls:p.Balance>0?'due':''})}
+    ${L('Project costs','− '+inr(src('Project cost')),{sub:1})}${L('Team payments','− '+inr(src('Team payment')),{sub:1})}${L('Company expenses','− '+inr(src('Company expense')),{sub:1,note:split})}${ho?L('Team share (hands-on set on project)','− '+inr(ho),{sub:1}):''}
+    ${L('Total spent','− '+inr(cost),{tot:1})}${L('Profit (received − spent)',inr(p.Profit),{tot:1,cls:p.Profit<0?'due':'in'})}
+    ${invs.map(r=>L(`${esc(r.Name)} · ${r.Pct}% share`,inr(r.Share),{sub:1,note:r.Role+' · paid '+inr(r.Paid)+(r.Due>0.5?' · due '+inr(r.Due):'')})).join('')}
+    ${L('Total shared with investors (paid out)',inr(paidAll),{tot:1})}
+    ${L('Hands-on money (received − spent − payouts paid)',inr(p.HandsOnMoney),{tot:1,cls:p.HandsOnMoney<0?'due':'',note:ho?'before the team share of '+inr(ho)+' set on the project':''})}</table></section>
+    <section class="panel"><h2>Progress</h2>
+      <div style="display:flex;justify-content:space-between"><span>Collected from client</span><b>${inr(p.Received)} of ${inr(p.Budget)}</b></div>${bar(pct(p.Received,p.Budget),'#0F7B5F')}<div class="muted" style="font-size:13px">${p.Budget>0?pct(p.Received,p.Budget)+'% collected':'no project value set'}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:14px"><span>Spent of money received</span><b>${inr(cost)} of ${inr(p.Received)}</b></div>${bar(pct(cost,p.Received),cost>p.Received?'#C0392B':'#ED5B2D')}<div class="muted" style="font-size:13px">${p.Received>0?pct(cost,p.Received)+'% of what came in':'nothing received yet'}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:14px"><span>Profit shared with investors</span><b>${inr(sharedT)} of ${inr(shareT)}</b></div>${bar(pct(sharedT,shareT),'#291B25')}<div class="muted" style="font-size:13px">${shareT>0?pct(sharedT,shareT)+'% paid out':'no profit share yet'}</div>
+      <div style="display:flex;justify-content:space-between;margin-top:14px"><span>Tasks paid</span><b>${tasks.filter(c=>c.Key!=='unpaid').length} of ${tasks.length}</b></div>${bar(pct(tasks.filter(c=>c.Key!=='unpaid').length,tasks.length),'#6B5B73')}
+      <table class="calc" style="margin-top:14px"><tr><td>Client</td><td class="n">${p.Client?`<a href="#client/${esc(encodeURIComponent(p.Client))}">${esc(p.Client)}</a>`:'In-house'}</td></tr>${p.Organization?`<tr><td>Organization</td><td class="n"><a href="#organization/${esc(encodeURIComponent(p.Organization))}">${esc(p.Organization)}</a></td></tr>`:''}<tr><td>Type</td><td class="n">${esc(p.Type||'–')}</td></tr><tr><td>Started</td><td class="n">${fmtD(p.Date)}${p.Balance>0?' · '+p.Age+' days':''}</td></tr>${p.Notes?`<tr><td>Notes</td><td class="n">${esc(p.Notes)}</td></tr>`:''}</table></section></div>
+  ${sec('pj-inv','Investors – profit share',`${table(invs,[['Name','Investor','text',{sub:'Role'}],['Pct','Share %','pct'],['Share','Share','money'],['Paid','Shared (paid)','money',{color:'in'}],['Due','Still to pay','money']],{total:['Share','Paid','Due'],empty:'No investor assigned. Edit the project and choose Investor 1 / Investor 2.',href:r=>'member/'+r.Name})}
+    <h3 style="margin:16px 0 6px">Payouts made on this project</h3>${table(po,[['Who','Investor'],['Date','Date','date'],['Status','Status','pill'],['Amount','Amount','money',{color:'in'}]],{total:['Amount'],empty:'No payouts recorded.'})}
+    <h3 style="margin:16px 0 6px">Expenses covered by investors</h3><p class="muted" style="margin:0 0 6px">Paid from the investor's own pocket for this project – not deducted from company money.</p>${table(ie,[['Reason','Expense','text',{sub:'PaidTo'}],['Date','Date','date'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount'],empty:'No investor-paid expenses on this project.'})}`)}
+  ${sec('pj-spend','Spending – what was spent',`<div class="stats" style="margin-bottom:12px">${stat('Project costs',inr(src('Project cost')))}${stat('Team payments',inr(src('Team payment')))}${stat('Company expenses',inr(src('Company expense')),'',split||'none charged here')}${ho?stat('Team share',inr(ho),'','set on the project'):''}</div>
+    ${rows.length?`<div class="grid2"><div><h3 style="margin:0 0 6px">Where it went</h3>${hbarsH(grpSum(rows,'Cat','Amount'))}</div><div></div></div>`:''}
+    <h3 style="margin:16px 0 6px">Every cost on this project</h3>${table(rows,[['What','What','text',{sub:'Who'}],['Date','Date','date'],['Src','Type'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount'],empty:'Nothing spent on this project yet.',
+      act:A?r=>/^(ho|tp-)/.test(String(r.ID))?'':(r.Src==='Company expense'?more([['Edit',`edit('CompanyExp','${r.ID}')`],['Delete',`del('CompanyExp','${r.ID}')`]]):more([['Edit',`edit('Expenses','${r.ID}')`],['Delete',`del('Expenses','${r.ID}')`]])):null})}
+    ${other.length?`<h3 style="margin:16px 0 6px">Done for this project, paid from another project's fund</h3><p class="muted" style="margin:0 0 6px">Not in this project's costs – charged to the project whose fund paid.</p>${table(other.map(expRow),[['Reason','Expense','text',{sub:'PaidTo'}],['Date','Date','date'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount']})}`:''}`,
+    A?`<button class="btn" onclick="edit('Expenses',null,{Project:${js(n)}})">${ico('plus')}Project cost</button><button class="btn primary" onclick="edit('CompanyExp',null,{Project:${js(n)}})">${ico('plus')}Company expense</button>`:'')}
+  ${sec('pj-pay','Payments received from the client',`${table(pays,[['Date','Date','date'],['InvoiceNo','Invoice'],['Mode','Mode'],['Amount','Amount','money',{color:'in'}]],{total:['Amount'],empty:'No payments received yet.'})}
+    <h3 style="margin:16px 0 6px">Invoices</h3>${invTable(INV.sort((a,b)=>String(b.Date).localeCompare(a.Date)))}`,A?`<button class="btn primary" onclick="edit('Payments',null,{Project:${js(n)}})">${ico('plus')}Record payment</button><button class="btn" onclick="invFromProject('${ID}')">${ico('invoice')}New invoice</button>`:'')}
+  ${sec('pj-work','Work done on this project',`${table(tasks,[['Content','Task','text',{sub:'DesignedBy'}],['Date','Date','date'],['State','Payment','pill'],['Amt','Paid','money']],{total:['Amt'],empty:'No work logged for this project.'})}`)}`);
 }
 
 /* ---------- Investor payout structure ----------
@@ -809,10 +908,11 @@ function investorRows(p){
       Payable:pay,Paid:paid,Pending:Math.max(0,pay-paid),Over:Math.max(0,paid-pay),Last:last,State:pl.Status==='Closed'&&Math.abs(pay-paid)<1?'Closed':pay-paid>1?'Due':pay-paid<-1?'Overpaid':'Settled'});
   });
   // investors who hold project shares but have no structure yet still appear (profit share)
-  [...new Set(D.Projects.flatMap(x=>[x.Investor1,x.Investor2]).filter(Boolean))].filter(n=>!withPlan.has(n)).forEach(n=>{
-    const s=shareOf(n);if(!s.n)return;
+  const flagged=(SCHEMA.Team||[]).includes('IsInvestor')?D.Team.filter(t=>isYes(t.IsInvestor)).map(t=>t.Name):[],anyPlan=new Set(D.InvestorPlans.map(x=>x.Investor));
+  [...new Set(D.Projects.flatMap(x=>[x.Investor1,x.Investor2]).filter(Boolean).concat(flagged))].filter(n=>!withPlan.has(n)).forEach(n=>{
+    const s=shareOf(n);if(!s.n&&anyPlan.has(n))return;
     const last=D.Payouts.filter(x=>!x.Plan&&poMember(x)===n&&paidPO(x)).map(x=>x.Date).sort().pop()||'';
-    out.push({ID:'',Investor:n,Investment:'',Structure:'Profit share',Text:'Share of project profit (no structure added yet)',Period:'Per project',Payable:s.pay,Paid:s.paid,Pending:Math.max(0,s.pay-s.paid),Over:Math.max(0,s.paid-s.pay),Last:last,State:s.pay-s.paid>1?'Due':s.pay-s.paid<-1?'Overpaid':'Settled',Virtual:1});
+    out.push({ID:'',Investor:n,Investment:'',Structure:'Profit share',Text:s.n?'Share of project profit (no structure added yet)':'No payout structure added yet',Period:s.n?'Per project':'',Payable:s.pay,Paid:s.paid,Pending:Math.max(0,s.pay-s.paid),Over:Math.max(0,s.paid-s.pay),Last:last,State:s.pay-s.paid>1?'Due':s.pay-s.paid<-1?'Overpaid':'Settled',Virtual:1});
   });
   return out.sort((a,b)=>a.Investor.localeCompare(b.Investor));
 }
@@ -901,18 +1001,14 @@ function expenses(){
   let h='';
   if(t==='project')h=listPanel('Expenses','Project costs',byDate(D.Expenses),[['Project','Project','text',{sub:r=>r.Category+(r.PaidTo?' · '+r.PaidTo:'')}],['Date','Date','date'],['Category','Category'],['Amount','Amount','money']]);
   else if(t==='company'){
-    const all=byDate(D.CompanyExp),ex=opEx(all),as=all.filter(isAsset),by=k=>sum(as.filter(a=>(a.FundedBy||'Not set')===k),'Amount');
-    const funds=[...new Set(as.map(a=>a.FundedBy||'Not set'))];
-    const look=ex.filter(e=>/domain|hosting|server|laptop|computer|mobile|camera|software|licen/i.test(e.Reason+' '+e.PaidFor));
-    const act=(r,k)=>adm()?more([['Edit',`edit('CompanyExp','${r.ID}')`],k==='a'?['Change to running expense',`setKind('${r.ID}','Expense')`]:['Change to company asset',`setKind('${r.ID}','Asset')`],['Delete',`del('CompanyExp','${r.ID}')`]]):'';
-    h=`<div class="stats">${stat('Running expenses',inr(sum(ex,'Amount')),'',`${ex.length} entr${ex.length===1?'y':'ies'} · deducted from profit`)}${stat('Company assets',inr(sum(as,'Amount')),'',`${as.length} entr${as.length===1?'y':'ies'} · not deducted from profit`)}${funds.map(f=>stat('Assets settled by '+esc(f),inr(by(f)),f==='Not set'?'due':'')).join('')}</div>
-    ${look.length&&adm()?`<div class="notice warn">${look.length} running expense${look.length>1?'s look':' looks'} like a company asset (${look.slice(0,3).map(e=>esc(e.Reason)).join(', ')}${look.length>3?'…':''}). Use ⋯ → <b>Change to company asset</b> so ${look.length>1?'they are':'it is'} not deducted from profit.</div>`:''}
-    <section class="panel"><div class="panel-head"><h2>Running expenses</h2><input class="filter" style="max-width:220px" type="search" placeholder="Filter" oninput="filt(this)">${adm()?`<button class="btn primary" onclick="edit('CompanyExp',null,{Kind:'Expense'},'Add company expense')">${ico('plus')}Add</button>`:''}<button class="btn" onclick="csv('CompanyExp')">Export</button></div>
-    <p class="muted" style="margin-top:-6px">Day-to-day costs (internet, rent, tools). These are deducted from company profit.</p>
-    ${table(ex,[['Reason','Reason','text',{sub:'PaidFor'}],['Date','Date','date'],['PaidTo','Paid to'],['Amount','Amount','money']],{total:['Amount'],act:r=>act(r,'e'),empty:'No running expenses.'})}</section>
-    <section class="panel"><div class="panel-head"><h2>Company assets</h2><input class="filter" style="max-width:220px" type="search" placeholder="Filter" oninput="filt(this)">${adm()?`<button class="btn primary" onclick="newAsset()">${ico('plus')}Add asset</button>`:''}</div>
-    <p class="muted" style="margin-top:-6px">Things the company owns – domain, hosting, laptop, software. Settled by the investors or the company's project fund, so they are <b>not</b> deducted from company profit.</p>
-    ${table(as,[['Reason','Asset','text',{sub:'PaidFor'}],['Date','Date','date'],['FundedBy','Settled by'],['PaidTo','Paid to'],['Amount','Amount','money']],{total:['Amount'],act:r=>act(r,'a'),empty:'No company assets yet. Add a domain, hosting or equipment here.'})}</section>`;
+    const all=byDate(D.CompanyExp).map(expRow),per={},unset=all.filter(e=>e.Cover.Type==='Not set');
+    all.forEach(e=>{if(e.Cover.Type!=='Investors')return;const w=e.Cover.Who.length?e.Cover.Who:['Investors (not named)'];w.forEach(x=>per[x]=(per[x]||0)+(+e.Amount||0)/w.length)});
+    h=`<div class="stats">${stat('All expenses',inr(sum(all,'Amount')),'',`${all.length} entr${all.length===1?'y':'ies'}`)}${stat('Company money',inr(sum(expCo(all),'Amount')),'','deducted from hands-on money')}${stat('Project funds',inr(sum(expFund(all),'Amount')),'','deducted from hands-on money')}${stat('Paid by investors',inr(sum(expInv(all),'Amount')),'','not deducted')}${Object.entries(per).map(([k,v])=>stat('Paid by '+esc(k),inr(v))).join('')}</div>
+    ${unset.length&&adm()?`<div class="notice warn">${unset.length} expense${unset.length>1?'s don\'t':' doesn\'t'} say who covered ${unset.length>1?'them':'it'}. Use ⋯ → <b>Edit</b> and choose company money, a project fund or the investors.</div>`:''}
+    <section class="panel"><div class="panel-head"><h2>Company expenses</h2><input class="filter" style="max-width:220px" type="search" placeholder="Filter" oninput="filt(this)">${adm()?`<button class="btn primary" onclick="edit('CompanyExp')">${ico('plus')}Add expense</button>`:''}<button class="btn" onclick="csv('CompanyExp')">Export</button></div>
+    <p class="muted" style="margin-top:-6px">Any company cost – for one project or in-house – and who covered it: company money, a project fund, or the investors (one person, or shared equally).</p>
+    ${table(all,[['Reason','Expense','text',{sub:r=>[r.PaidFor,r.PaidTo&&'Paid to '+r.PaidTo].filter(Boolean).join(' · ')}],['Date','Date','date'],['ForTxt','For'],['By','Covered by'],['Amount','Amount','money']],
+      {total:['Amount'],empty:'No company expenses yet.',act:adm()?r=>more([['Edit',`edit('CompanyExp','${r.ID}')`],['Delete',`del('CompanyExp','${r.ID}')`]]):null})}</section>`;
   }
   else{
     const A=D.Ads.filter(inFY),w=wallet();
@@ -923,10 +1019,6 @@ function expenses(){
   main(tabs('expenses',T,t)+(t==='project'?`<p class="muted" style="margin:-4px 0 12px">Team payments and the work log are under <a href="#work/pay">Work tracker</a>.</p>`:'')+h);
 }
 
-function newAsset(){edit('CompanyExp',null,{Kind:'Asset',FundedBy:'Project fund'},'Add company asset')}
-async function setKind(id,k){const r=D.CompanyExp.find(x=>x.ID===id);if(!r)return;
-  if(k==='Asset'){edit('CompanyExp',id,{},'Change to company asset');const q=$('mb').querySelector('[name=Kind]');if(q)q.value='Asset';const f=$('mb').querySelector('[name=FundedBy]');if(f&&!f.value)f.value='Project fund';return}
-  try{await api('saveRow',TOKEN,'CompanyExp',{...r,Kind:'Expense',FundedBy:''});toast('Changed to running expense');await load()}catch(e){alert(e.message||e)}}
 
 /* ---------- Reports: every tab follows the same period (All / Year / Month) ---------- */
 function reports(){
@@ -948,18 +1040,18 @@ function subPeriods(p){
 }
 function repSummary(){
   const p=FY,f=r=>inPer(r,p),H=handsOn(p),Hall=handsOn('all');
-  const pays=D.Payments.filter(f).map(x=>({...x,Client:payClient(x)})),ex=D.Expenses.filter(f),tp=D.TeamPay.filter(f).filter(paidTP),cx=opEx(D.CompanyExp.filter(f)),ax=D.CompanyExp.filter(f).filter(isAsset);
+  const pays=D.Payments.filter(f).map(x=>({...x,Client:payClient(x)})),ex=D.Expenses.filter(f),tp=D.TeamPay.filter(f).filter(paidTP),cx=opEx(D.CompanyExp.filter(f)),ax=expInv(D.CompanyExp.filter(f));
   const inv=docs('Invoice').filter(f).map(invCalc).filter(d=>d.State!=='Cancelled'),qs=docs('Quotation').filter(f);
-  const cost=H.proj+H.team+H.comp,net=H.rec-cost;
+  const cost=H.proj+H.team+H.comp+H.fund,net=H.rec-cost;
   const rows=subPeriods(p).map(k=>{const h=handsOn(k);return {Per:k.length===4?k:monthName(k),Key:k,Received:h.rec,Proj:h.proj,Team:h.team,Comp:h.comp+h.fund,Inv:h.inv,Net:h.net}});
-  $('rep').innerHTML=`<div class="stats">${stat('Received',inr(H.rec),'in',`${pays.length} payment${pays.length===1?'':'s'}`)}${stat('Costs',inr(cost),'',`${inr(H.proj)} project · ${inr(H.team)} team · ${inr(H.comp)} company`)}${stat('Net profit',inr(net),net<0?'due':'in',ax.length?inr(sum(ax,'Amount'))+' company assets not deducted':'received minus costs')}${stat('Invoices raised',inr(sum(inv,'Total')),'',`${inv.length} invoices · ${qs.length} quotations`)}</div>
+  $('rep').innerHTML=`<div class="stats">${stat('Received',inr(H.rec),'in',`${pays.length} payment${pays.length===1?'':'s'}`)}${stat('Costs',inr(cost),'',`${inr(H.proj)} project · ${inr(H.team)} team · ${inr(H.comp+H.fund)} company`)}${stat('Net profit',inr(net),net<0?'due':'in',ax.length?inr(sum(ax,'Amount'))+' paid by investors, not deducted':'received minus costs')}${stat('Invoices raised',inr(sum(inv,'Total')),'',`${inv.length} invoices · ${qs.length} quotations`)}</div>
   <div class="grid2"><section class="panel ho-panel"><h2>Hands-On Money</h2><div class="ho-fig sm ${H.net<0?'due':''}">${inr(H.net)}</div><p class="muted" style="margin:2px 0 10px">${p==='all'?'Money in hand now, after every cost and payout.':'Added to money in hand in this period.'+` Overall: <b>${inr(Hall.net)}</b>`}</p><table class="calc">${hoRows(H)}</table></section>
-  <section class="panel"><h2>Where the money went</h2>${hbarsH([['Project costs',H.proj],['Team payments',H.team],['Company expenses',H.comp],['Assets (project fund)',H.fund],['Investor payouts',H.inv]].filter(x=>x[1]).sort((a,b)=>b[1]-a[1]))}</section></div>
+  <section class="panel"><h2>Where the money went</h2>${hbarsH([['Project costs',H.proj],['Team payments',H.team],['Company expenses',H.comp],['Paid from project funds',H.fund],['Investor payouts',H.inv]].filter(x=>x[1]).sort((a,b)=>b[1]-a[1]))}</section></div>
   ${rows.length?`<section class="panel mt"><h2>${p==='all'?'Year by year':'Month by month'}</h2>${table(rows,[['Per',p==='all'?'Year':'Month'],['Received','Received','money',{color:'in'}],['Proj','Project costs','money'],['Team','Team payments','money'],['Comp','Company exp.','money'],['Inv','Investor payouts','money'],['Net','Hands-on','money']],
     {total:['Received','Proj','Team','Comp','Inv','Net'],act:r=>`<button class="btn sm noprint" onclick="setFY('${r.Key}')">Open</button>`})}</section>`:''}
   <div class="grid2 mt"><section class="panel"><h2>Received by client</h2>${hbarsH(grpSum(pays,'Client','Amount').slice(0,10))}</section><section class="panel"><h2>Costs by type</h2>${hbarsH(grpSum(ex.concat(tp.map(x=>({...x,Category:'Team payments'})),cx.map(c=>({...c,Category:'Company: '+(c.Reason||'Other')}))),'Category','Amount').slice(0,10))}</section></div>
   ${p!=='all'?`<section class="panel mt"><h2>Payments received</h2>${payTable(pays.sort((a,b)=>String(b.Date).localeCompare(a.Date)))}</section>`:''}
-  <p class="muted" style="font-size:13px">Hands-On Money = received − project costs − team payments − company running expenses − assets paid from the project fund − investor payouts. Project costs from your old sheet are dated on each project's start date.</p>`;
+  <p class="muted" style="font-size:13px">Hands-On Money = received − project costs − team payments − company expenses − expenses paid from project funds − investor payouts. Expenses paid by investors from their own pocket are not deducted. Project costs from your old sheet are dated on each project's start date.</p>`;
 }
 function repTeam(){
   const all=D.TeamPay.filter(inFY),paid=all.filter(paidTP),M=memberPayRows().filter(r=>r.Total||r.Pending);
@@ -979,13 +1071,12 @@ function repWork(){
   <section class="panel"><h2>By project</h2>${table(Object.values(P).sort((a,b)=>b.Tasks-a.Tasks),[['Project','Project'],['Tasks','Tasks','num'],['Task','Paid · task','num'],['Weekly','Paid · weekly','num'],['Unpaid','Not paid','num'],['Cost','Team cost (paid)','money']],{total:['Cost'],empty:'No work logged in this period.'})}</section>`;
 }
 function repExpenses(){
-  const f=inFY,ex=D.Expenses.filter(f),tp=D.TeamPay.filter(f).filter(paidTP),cx=opEx(D.CompanyExp.filter(f)),ax=D.CompanyExp.filter(f).filter(isAsset),ads=D.Ads.filter(f),rc=D.Recharges.filter(f);
-  const byP=grpSum(ex.concat(teamAlloc().filter(f)),'Project','Amount');
-  $('rep').innerHTML=`<div class="stats">${stat('Project costs',inr(sum(ex,'Amount')),'',ex.length+' entries')}${stat('Team payments',inr(sum(tp,'Amount')),'',tp.length+' payments')}${stat('Company running expenses',inr(sum(cx,'Amount')),'','deducted from profit')}${stat('Company assets',inr(sum(ax,'Amount')),'','not deducted from profit')}</div>
+  const f=inFY,ex=D.Expenses.filter(f),tp=D.TeamPay.filter(f).filter(paidTP),all=D.CompanyExp.filter(f).map(expRow),cx=opEx(all),ax=expInv(all),ads=D.Ads.filter(f),rc=D.Recharges.filter(f);
+  const byP=grpSum(ex.concat(teamAlloc().filter(f),cexpAlloc().filter(f)),'Project','Amount');
+  $('rep').innerHTML=`<div class="stats">${stat('Project costs',inr(sum(ex,'Amount')),'',ex.length+' entries')}${stat('Team payments',inr(sum(tp,'Amount')),'',tp.length+' payments')}${stat('Company expenses',inr(sum(cx,'Amount')),'','company money + project funds')}${stat('Paid by investors',inr(sum(ax,'Amount')),'','not deducted from profit')}</div>
   <div class="grid2"><section class="panel"><h2>Project costs by type</h2>${hbarsH(grpSum(ex,'Category','Amount'))}</section><section class="panel"><h2>Costs by project</h2>${hbarsH(byP.slice(0,12))}</section></div>
-  <div class="grid2 mt"><section class="panel"><h2>Company expenses</h2>${hbarsH(grpSum(cx,'Reason','Amount').slice(0,12))}</section><section class="panel"><h2>Ads</h2><div class="stats" style="margin:0">${stat('Ad spend incl. GST',inr(sum(ads,'Total')))}${stat('Wallet recharged',inr(sum(rc,'Amount')))}</div></section></div>
-  <section class="panel mt"><h2>Company running expenses</h2>${table(cx.sort((a,b)=>String(b.Date).localeCompare(a.Date)),[['Reason','Reason','text',{sub:'PaidFor'}],['Date','Date','date'],['PaidTo','Paid to'],['Amount','Amount','money']],{total:['Amount'],empty:'No company expenses in this period.'})}</section>
-  ${ax.length?`<section class="panel"><h2>Company assets</h2>${table(ax,[['Reason','Asset','text',{sub:'PaidFor'}],['Date','Date','date'],['FundedBy','Settled by'],['Amount','Amount','money']],{total:['Amount']})}</section>`:''}`;
+  <div class="grid2 mt"><section class="panel"><h2>Company expenses</h2>${hbarsH(grpSum(all,'Reason','Amount').slice(0,12))}</section><section class="panel"><h2>Ads</h2><div class="stats" style="margin:0">${stat('Ad spend incl. GST',inr(sum(ads,'Total')))}${stat('Wallet recharged',inr(sum(rc,'Amount')))}</div></section></div>
+  <section class="panel mt"><h2>All company expenses</h2>${table(all.sort((a,b)=>String(b.Date).localeCompare(a.Date)),[['Reason','Expense','text',{sub:'PaidFor'}],['Date','Date','date'],['ForTxt','For'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount'],empty:'No company expenses in this period.'})}</section>`;
 }
 function repInvestors(){
   const P=calc().filter(inFY),e1=sum(P,'Inv1'),e2=sum(P,'Inv2'),p1=sum(P,'Paid1'),p2=sum(P,'Paid2'),d1=e1-p1,d2=e2-p2;
@@ -1008,7 +1099,12 @@ function repHealth(){
   D.TeamPay.filter(p=>tids(p).some(i=>!cIds.has(i))).forEach(p=>add(0,`A ${esc(p.PayType.toLowerCase())} payment to <b>${esc(p.Member)}</b> on ${fmtD(p.Date)} points to a task that was deleted from the work tracker.`));
   D.TeamPay.filter(p=>p.PayType==='Weekly'&&!p.FromDate).forEach(p=>add(0,`Weekly payment to <b>${esc(p.Member)}</b> on ${fmtD(p.Date)} has no week set.`));
   D.Content.filter(c=>D.TeamPay.filter(p=>paidTP(p)&&tids(p).includes(String(c.ID))).length>1).forEach(c=>add(1,`"${esc(c.Content)}" by ${esc(c.DesignedBy)} is linked to more than one paid team payment – check it is not paid twice.`));
-  ['Payments','Expenses','Ads','Recharges','Content','Payouts','TeamPay'].forEach(s=>{const bad=D[s].filter(r=>r.Project&&!names.has(r.Project));if(bad.length)add(1,`${bad.length} ${s} record(s) point to a project that doesn't exist: ${[...new Set(bad.map(b=>esc(b.Project)))].join(', ')}`)});
+  ['Payments','Expenses','Ads','Recharges','Content','Payouts','TeamPay','CompanyExp'].forEach(s=>{const bad=D[s].filter(r=>r.Project&&!names.has(r.Project));if(bad.length)add(1,`${bad.length} ${s} record(s) point to a project that doesn't exist: ${[...new Set(bad.map(b=>esc(b.Project)))].join(', ')}`)});
+  {const ce=D.CompanyExp.map(e=>({e,c:cover(e)})),n1=ce.filter(x=>x.c.Type==='Not set').length,n2=ce.filter(x=>x.c.Type==='Project fund'&&!(x.e.FundProject||x.e.Project)).length,n3=ce.filter(x=>x.c.Type==='Investors'&&!x.c.Who.length).length;
+   if(n1)add(1,`${n1} company expense${n1>1?'s don\'t':' doesn\'t'} say who covered ${n1>1?'them':'it'} – edit ${n1>1?'them':'it'} under Expenses → Company.`);
+   if(n2)add(1,`${n2} expense${n2>1?'s were':' was'} paid from a project fund but no project is named – edit ${n2>1?'them':'it'} so the cost lands on the right project.`);
+   if(n3)add(0,`${n3} expense${n3>1?'s were':' was'} paid by investors but no investor is named – edit ${n3>1?'them':'it'} to say who paid.`);
+   const bf=D.CompanyExp.filter(e=>e.FundProject&&!names.has(e.FundProject));if(bf.length)add(1,`${bf.length} expense(s) name a project fund that doesn't exist: ${[...new Set(bf.map(b=>esc(b.FundProject)))].join(', ')}`)}
   const invNos=new Set(docs('Invoice').map(d=>d.No));D.Payments.filter(p=>p.InvoiceNo&&!invNos.has(p.InvoiceNo)).forEach(p=>add(1,`A payment of ${inr(p.Amount)} on ${fmtD(p.Date)} points to invoice ${esc(p.InvoiceNo)}, which doesn't exist.`));
   docs('Invoice').map(invCalc).filter(d=>d.Balance<0).forEach(d=>add(1,`Invoice <b>${esc(d.No)}</b> has received ${inr(-d.Balance)} more than its total.`));
   clientNames().filter(n=>!D.Clients.some(c=>c.Name===n)).forEach(n=>add(0,`Client <b>${esc(n)}</b> has no billing details yet.`));
@@ -1089,6 +1185,26 @@ function openSheet(title,html,onSave,saveLabel='Save',wide=false){
 function closeM(){$('modal').hidden=true}
 $('modal')&&$('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeM()});
 
+/* ---------- Client -> Project picker (used by every form that asks for a project) ---------- */
+function projScope(cl){const L=D.Projects.slice().sort((a,b)=>String(b.Date).localeCompare(String(a.Date)));return cl===INHOUSE?L.filter(x=>isInhouse(x.Client)):cl?L.filter(x=>x.Client===cl):L}
+function projOptsHTML(cl,cur,opt){
+  const L=projScope(cl),on=x=>x.Status==='Active'||x.Project===cur,o=x=>`<option value="${esc(x.Project)}" ${x.Project===cur?'selected':''}>${esc(x.Project)}${x.Status&&x.Status!=='Active'?' ('+esc(x.Status)+')':''}</option>`,a=L.filter(on),r=L.filter(x=>!on(x));
+  return `<option value="">${cl&&!L.length?'No projects for this client':opt?'No single project / general':'Choose a project'}</option>`+a.map(o).join('')+(r.length?`<optgroup label="Completed / other">${r.map(o).join('')}</optgroup>`:'')+(cur&&!L.some(x=>x.Project===cur)?`<option value="${esc(cur)}" selected>${esc(cur)}</option>`:'');
+}
+const pcClientOf=pn=>{const p=D.Projects.find(x=>x.Project===pn);return p?(isInhouse(p.Client)?INHOUSE:p.Client):''};
+function pcHTML(cur,label,opt,cl0){
+  const cl=cl0||pcClientOf(cur);
+  return `<label>Client<select id="pcC"><option value="">All clients</option><option value="${INHOUSE}" ${cl===INHOUSE?'selected':''}>${INHOUSE} (our own work)</option>${clientNames().filter(n=>!isInhouse(n)).map(n=>`<option ${n===cl?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
+  <label>${esc(label||'Project')}<select name="Project" data-opt="${opt?1:0}">${projOptsHTML(cl,cur,opt)}</select></label>`;
+}
+function pcWire(after){
+  const c=$('pcC'),p=$('mb').querySelector('[name=Project]'),opt=p.dataset.opt==='1';
+  c.onchange=()=>{p.innerHTML=projOptsHTML(c.value,'',opt);after&&after()};
+  p.onchange=()=>{const k=pcClientOf(p.value);if(k&&c.value!==k)c.value=k;after&&after()};
+}
+/* set client + project together (e.g. when an invoice is chosen) */
+function pcSet(client,project){const c=$('pcC'),p=$('mb').querySelector('[name=Project]'),k=client?(isInhouse(client)?INHOUSE:client):pcClientOf(project);c.value=k||'';p.innerHTML=projOptsHTML(c.value,project||'',p.dataset.opt==='1')}
+
 /* ---------- Record forms ---------- */
 const FORM_HIDE=['ID','ReceiptNo','OldNo','OldReceiptNo'];
 function edit(name,id,preset={},title){
@@ -1096,8 +1212,10 @@ function edit(name,id,preset={},title){
   if(name==='Organizations'&&!BACKEND_OK){alert('Update the Apps Script backend first (see the note on the Organization page).');return}
   if(name==='Team'&&!TEAM_OK){alert('Update the Apps Script backend first (see the Team section in the README).');return}
   if(name==='TeamPay')return payTeam(id,preset);
+  if(name==='CompanyExp')return editExpense(id,preset);
   if(name==='InvestorPlans'&&!PAY_OK){alert('Update the Apps Script backend first (paste the new Code.gs and deploy a new version).');return}
   const rec=id?{...D[name].find(r=>r.ID===id)}:{...preset};
+  if(name==='Team'&&id&&!rec.IsInvestor&&isInvestorName(rec.Name))rec.IsInvestor='Yes';   // already holds shares / a structure
   if(name==='CompanyExp'&&!rec.Kind)rec.Kind='Expense';
   if(!id){if(SCHEMA[name].includes('Date')&&!rec.Date)rec.Date=today();if(name==='Projects'){rec.Inv1Pct??=75;rec.Status??='Active'}if(name==='Team')rec.JoinDate??=today();if(name==='Content')rec.Status??='Pending';if(name==='Ads')rec.Result??='Running';if(name==='CompanyExp')rec.Kind??='Expense';if(name==='Payments')rec.Mode??='UPI';if(name==='Payouts')rec.Status??='Paid';if(name==='InvestorPlans'){rec.Status??='Active';rec.Structure??='Profit share';rec.Frequency??='Monthly';rec.StartDate??=today()}
     if(name==='Payments'&&rec.Project&&rec.Amount==null){const c=calc().find(p=>p.Project===rec.Project);if(c&&c.Balance>0)rec.Amount=c.Balance}}
@@ -1111,9 +1229,10 @@ function edit(name,id,preset={},title){
   const fields=SCHEMA[name].filter(c=>!hide.includes(c)).sort((a,b)=>ORDER?(ORDER.indexOf(a)+1||99)-(ORDER.indexOf(b)+1||99):0);
   const teamNames=D.Team.map(t=>t.Name);
   const html=fields.map(c=>{
-    const v=esc(rec[c]??''),opts=c==='Status'?STATUS[name]:(c==='Investor1'||c==='Investor2'||(c==='Member'&&name==='Payouts')||(c==='Investor'&&name==='InvestorPlans'))?teamNames:c==='FundedBy'?['Project fund','Investors (shared)'].concat(teamNames):OPTS[c];let inp,cls='';
+    if(c==='Project'&&name!=='Projects')return pcHTML(rec.Project,(FLABEL[name]||{}).Project||'Project',name==='Payouts');
+    const v=esc(rec[c]??''),opts=c==='Status'?STATUS[name]:(c==='Investor1'||c==='Investor2'||(c==='Member'&&name==='Payouts')||(c==='Investor'&&name==='InvestorPlans'))?investorNames():OPTS[c];let inp,cls='';
     if(c==='Plan')inp=`<select name="Plan"><option value="">${'None – project profit share'}</option>${D.InvestorPlans.map(x=>`<option value="${esc(x.ID)}" data-m="${esc(x.Investor)}" ${String(x.ID)===String(rec.Plan)?'selected':''}>${esc(x.Investor)} · ${esc(planText(x))}</option>`).join('')}</select>`;
-    else if(c==='InvoiceNo')inp=`<select name="InvoiceNo"><option value="">Not linked</option>${invs.map(d=>`<option value="${esc(d.No)}" data-p="${esc(d.Project)}" data-b="${d.Balance}" ${d.No===rec.InvoiceNo?'selected':''}>${esc(d.No)} – ${esc(d.Client)} (due ${inr(d.Balance)})</option>`).join('')}</select>`;
+    else if(c==='InvoiceNo')inp=`<select name="InvoiceNo"><option value="">Not linked</option>${invs.map(d=>`<option value="${esc(d.No)}" data-p="${esc(d.Project)}" data-c="${esc(d.Client)}" data-b="${d.Balance}" ${d.No===rec.InvoiceNo?'selected':''}>${esc(d.No)} – ${esc(d.Client)} (due ${inr(d.Balance)})</option>`).join('')}</select>`;
     else if(opts)inp=`<select name="${c}"><option value=""></option>${opts.concat(rec[c]&&!opts.includes(rec[c])?[rec[c]]:[]).map(o=>`<option ${o==rec[c]?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
     else if(/Date$/.test(c))inp=`<input type="date" name="${c}" value="${v}">`;
     else if(NUMK.includes(c))inp=`<input type="number" inputmode="decimal" step="any" name="${c}" value="${v}">`;
@@ -1151,7 +1270,8 @@ function edit(name,id,preset={},title){
     q('Plan').onchange=()=>{const o=q('Plan').selectedOptions[0];if(o&&o.dataset.m&&!q('Member').value){q('Member').value=o.dataset.m;syncP()}};syncP()}
   if(name==='InvestorPlans'){const syncS=()=>{const st=q('Structure').value,show=(n,v)=>{const l=q(n)&&q(n).closest('label');if(l)l.style.display=v?'':'none'};show('Rate',/^Fixed/.test(st));
       const r=q('Rate').closest('label');if(r)r.firstChild.textContent=st==='Fixed return %'?'Return % per payout period':'Fixed amount per payout period (₹)';};q('Structure').onchange=syncS;syncS()}
-  if(name==='Payments')q('InvoiceNo').onchange=()=>{const o=q('InvoiceNo').selectedOptions[0];if(o&&o.dataset.p&&!q('Project').value)q('Project').value=o.dataset.p;if(o&&o.dataset.b&&!q('Amount').value)q('Amount').value=o.dataset.b};
+  if(name!=='Projects'&&$('pcC'))pcWire();
+  if(name==='Payments')q('InvoiceNo').onchange=()=>{const o=q('InvoiceNo').selectedOptions[0];if(o&&!q('Project').value&&(o.dataset.p||o.dataset.c))pcSet(o.dataset.c,o.dataset.p);if(o&&o.dataset.b&&!q('Amount').value)q('Amount').value=o.dataset.b};
 }
 async function del(name,id){
   let msg='Delete this record? This cannot be undone.';
@@ -1165,6 +1285,51 @@ async function payDesigner(i){
   try{const n=await api('markPaid',TOKEN,ids,today());toast(n+' marked paid');await load()}catch(e){alert(e.message||e)}
 }
 
+/* ---------- Company expense: for a project or in-house · covered by company money, a project fund, or investors ---------- */
+function editExpense(id,preset={}){
+  if(!adm())return;
+  if(!(SCHEMA.CompanyExp||[]).includes('FundProject')){alert('Update the Apps Script backend first (paste the new Code.gs, then Deploy → Manage deployments → Edit → New version).');return}
+  const e=id?{...D.CompanyExp.find(x=>x.ID===id)}:{Date:today(),...preset};
+  const cv=cover(e),by=(id||e.FundedBy)?(cv.Type==='Not set'?'':cv.Type):'Company',who=new Set(cv.Who);
+  const known=investorNames(),invs=known.concat(cv.Who.filter(n=>!known.includes(n)));
+  const projs=D.Projects.slice().sort((a,b)=>String(b.Date).localeCompare(String(a.Date))),fundCur=e.FundProject||e.Project||'';
+  const sel=(v,x)=>v===x?'selected':'';
+  openSheet(id?'Edit company expense':'Add company expense',`
+  <label>Date<input type="date" name="Date" value="${esc(e.Date||'')}"></label>
+  <label>Amount (₹)<input type="number" inputmode="decimal" step="any" name="Amount" value="${esc(e.Amount??'')}"></label>
+  <label class="full">What was it for?<input name="Reason" value="${esc(e.Reason||'')}" placeholder="e.g. Domain renewal, internet bill, laptop"></label>
+  <label>Paid to<input name="PaidTo" value="${esc(e.PaidTo||'')}"></label>
+  <label>More details (optional)<input name="PaidFor" value="${esc(e.PaidFor||'')}"></label>
+  <label class="full">This expense is for<select id="ceFor"><option value="in" ${e.Project?'':'selected'}>In-house (not for one project)</option><option value="proj" ${e.Project?'selected':''}>A particular project</option></select></label>
+  <div id="ceProj" style="display:contents">${pcHTML(e.Project,'Project',false)}</div>
+  <label class="full">Who covered it?<select name="FundedBy" id="ceBy">${by?'':'<option value="">Choose…</option>'}<option value="Company" ${sel(by,'Company')}>Company (hands-on money)</option><option value="Project fund" ${sel(by,'Project fund')}>Project fund</option><option value="Investors" ${sel(by,'Investors')}>Investors</option></select></label>
+  <label class="full" id="ceFundL">Project fund of (which project paid)<select name="FundProject"><option value="">Choose the project</option>${projs.map(p=>`<option value="${esc(p.Project)}" ${p.Project===fundCur?'selected':''}>${esc(p.Project)}${p.Client?' · '+esc(p.Client):' · In-house'}</option>`).join('')}${fundCur&&!projs.some(p=>p.Project===fundCur)?`<option value="${esc(fundCur)}" selected>${esc(fundCur)}</option>`:''}</select></label>
+  <div class="full" id="ceInv"><div class="tklist"><div class="tkhead"><b>Paid by</b><span class="muted" id="ceEach"></span></div>
+    ${invs.length?invs.map(n=>`<label class="tk-row"><input type="checkbox" class="ik" value="${esc(n)}" ${who.has(n)?'checked':''}><span>${esc(n)}</span></label>`).join(''):'<p class="hint">No investors yet. Go to Team → open a member → Edit → set “Is an investor?” to Yes.</p>'}</div></div>
+  <label class="full">Notes<textarea name="Notes">${esc(e.Notes||'')}</textarea></label>`,
+  async o=>{
+    const rec={...e,...o,ID:id||'',Kind:'Expense'};
+    if(!rec.Reason)throw new Error('Say what the expense was for.');
+    if(!(+rec.Amount>0))throw new Error('Enter the amount.');
+    if($('ceFor').value!=='proj')rec.Project='';else if(!rec.Project)throw new Error('Choose the client and project this expense is for – or choose In-house.');
+    if(!rec.FundedBy)throw new Error('Choose who covered this expense.');
+    if(rec.FundedBy==='Project fund'){if(!rec.FundProject)throw new Error('Choose the project whose fund paid for it.')}else rec.FundProject='';
+    if(rec.FundedBy==='Investors'){const w=checked();if(!w.length)throw new Error('Tick the investor(s) who paid.');rec.PaidBy=w.join(', ')}else rec.PaidBy='';
+    await api('saveRow',TOKEN,'CompanyExp',rec);toast('Expense saved');await load();
+  },'Save expense',true);
+  const q=n=>$('mb').querySelector(`[name=${n}]`),checked=()=>[...$('mb').querySelectorAll('.ik:checked')].map(x=>x.value);
+  const each=()=>{const n=checked().length,a=+q('Amount').value||0;$('ceEach').textContent=n>1?'Shared equally'+(a?' – '+inr(a/n)+' each':''):n===1?'Paid by one investor':'Tick one investor if one person paid, or several to share it equally'};
+  const autoInv=()=>{if($('ceBy').value!=='Investors'||checked().length)return;const pj=D.Projects.find(x=>x.Project===q('Project').value);if(!pj)return;
+    [pj.Investor1,pj.Investor2].filter(Boolean).forEach(n=>{const b=[...$('mb').querySelectorAll('.ik')].find(x=>x.value===n);if(b)b.checked=true});each()};
+  const fundDefault=()=>{if($('ceBy').value==='Project fund'&&!q('FundProject').value&&$('ceFor').value==='proj'&&q('Project').value)q('FundProject').value=q('Project').value};
+  const sync=()=>{const b=$('ceBy').value;$('ceProj').style.display=$('ceFor').value==='proj'?'contents':'none';$('ceFundL').style.display=b==='Project fund'?'':'none';$('ceInv').style.display=b==='Investors'?'':'none';each()};
+  $('ceFor').onchange=()=>{fundDefault();autoInv();sync()};
+  $('ceBy').onchange=()=>{fundDefault();autoInv();sync()};
+  $('mb').querySelectorAll('.ik').forEach(x=>x.onchange=each);q('Amount').oninput=each;
+  pcWire(()=>{fundDefault();autoInv()});
+  sync();
+}
+
 /* ---------- Invoice / quotation editor ---------- */
 function newDoc(type,preset={}){if(!adm())return;editDoc(null,{Type:type,Date:today(),Status:type==='Invoice'?'Issued':'Draft',Plan:type==='Quotation'?'Monthly':'',ValidDate:'',Items:JSON.stringify([{title:'',points:[],amount:''}]),...preset})}
 function invFromProject(id){const p=D.Projects.find(x=>x.ID===id);newDoc('Invoice',{Client:p.Client,Organization:p.Organization||'',Project:p.Project,Items:JSON.stringify([{title:p.Project,points:[],amount:p.Budget}])})}
@@ -1176,7 +1341,7 @@ function editDoc(id,preset){
   openSheet((id?'Edit ':'New ')+T.toLowerCase()+(id?' '+d.No:''),`
   <label>Client<select name="Client"><option value="">Choose a client</option>${cl.map(c=>`<option ${c===d.Client?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
   <label>Organization (optional)<input name="Organization" list="dl_og" value="${esc(d.Organization||docOrg(d))}" placeholder="Bill a specific organization"><datalist id="dl_og">${orgsFor(d.Client).map(x=>`<option value="${esc(x)}">`).join('')}</datalist></label>
-  <label>Project (optional)<input name="Project" list="dl_dp" value="${esc(d.Project)}"><datalist id="dl_dp">${pl.map(p=>`<option value="${esc(p)}">`).join('')}</datalist></label>
+  <label>Project (optional)<select name="Project" data-opt="1">${projOptsHTML(d.Client,d.Project,true)}</select></label>
   <label>Date<input type="date" name="Date" value="${esc(d.Date)}"></label>
   <label>${isQ?'Valid till (optional)':'Due date (optional)'}<input type="date" name="ValidDate" value="${esc(d.ValidDate)}"></label>
   <label>${T} number<input name="No" value="${esc(d.No)}" placeholder="Next number: ${esc(ST()[isQ?'QuoPrefix':'InvPrefix'])}-${new Date().getFullYear()}-NN"></label>
@@ -1199,7 +1364,7 @@ function editDoc(id,preset){
     toast(T+' saved');await load();printDoc(newId);
   },'Save '+T.toLowerCase(),true);
   items(d).forEach(addIt);if(!items(d).length)addIt();
-  $('mb').querySelector('[name=Client]').onchange=e=>{$('dl_dp').innerHTML=D.Projects.filter(p=>p.Client===e.target.value).map(p=>`<option value="${esc(p.Project)}">`).join('');$('dl_og').innerHTML=orgsFor(e.target.value).map(x=>`<option value="${esc(x)}">`).join('')};
+  $('mb').querySelector('[name=Client]').onchange=e=>{$('mb').querySelector('[name=Project]').innerHTML=projOptsHTML(e.target.value,'',true);$('dl_og').innerHTML=orgsFor(e.target.value).map(x=>`<option value="${esc(x)}">`).join('')};
   $('mb').querySelector('[name=Project]').onchange=e=>{const pr=D.Projects.find(x=>x.Project===e.target.value),og=$('mb').querySelector('[name=Organization]');if(pr&&pr.Organization&&og&&!og.value)og.value=pr.Organization};
   docTot();
 }

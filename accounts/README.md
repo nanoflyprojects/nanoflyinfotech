@@ -125,3 +125,16 @@ The portal is an installable app (PWA) – one code base for Android, iPhone, Wi
 2. Upload the whole portal folder (replace the old files).
 3. Log in once. The first load adds the `App_TeamPay` and `App_InvestorPlans` sheets and six columns at the end of `App_Payouts` (`Member`, `FromDate`, `ToDate`, `Payable`, `Status`, `Plan`). Nothing existing moves; old payouts count as Paid.
 4. Team → Investor payouts → *Add structure* for each investor.
+
+## v5.3 – company expenses and investors
+- **One kind of company expense** (no more asset / running-expense split). Each expense says what it was for (a project or in-house) and who covered it:
+  - **Company (hands-on money)** – deducted from Hands-On Money.
+  - **Project fund** + the project's name – deducted from Hands-On Money and charged to that project's costs.
+  - **Investors** – tick one investor (paid by one) or several (shared equally). Paid from their own pocket, so not deducted from Hands-On Money.
+- **Only investors** appear in investor dropdowns, Investor payouts and expense "paid by". Mark a member under Team → Edit → *Is an investor? = Yes*. Members who already hold project shares or a payout structure count as investors automatically.
+- **Deploy `Code.gs` as a New version** – the new columns (CompanyExp: Project, FundProject, PaidBy · Team: IsInvestor) are added automatically; nothing is moved or deleted.
+
+## v5.4 – project page and investor expense view
+- **Project page** (`#project/<name>`): click any project in a list. One complete page (v5.5, no tabs): value, received, balance to collect, total spent, profit, hands-on money, profit shares and what has been shared; a full money statement; investors' shares and payouts; every cost with who covered it; payments and invoices; work. Quick-jump buttons at the top. Admins can mark a project completed / on hold from the ⋯ menu.
+- **Investor page**: new "Expenses covered" section – each expense an investor paid (their share when shared).
+- Investor logins receive only their own covered expenses and those charged to their projects (co-investor names are never sent) – redeploy `Code.gs` as a New version.

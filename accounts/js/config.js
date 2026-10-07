@@ -2,7 +2,7 @@
    CONNECTION – paste your Apps Script Web App URL here
    (Apps Script → Deploy → Manage deployments → Web app URL, ends in /exec)
    ========================================================= */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzPUWG1Be-a-ioyIRf4NXjnzED08aTKjUDq-mDUDfQH-yKUURzB08cTzMGX3HHMlNhD/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbx-LuPtO3zWEGcSyTE-SmlT9FwZu9icPJIH3jowddC3ocKc1ssaSX9J-EK8dl3I3-5K/exec';
 
 /* Image files in the /assets folder */
 const ASSET = f => new URL('assets/' + f, document.baseURI).href;
