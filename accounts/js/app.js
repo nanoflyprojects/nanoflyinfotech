@@ -42,7 +42,7 @@ const STATUS={Projects:['Active','Completed','On Hold','Cancelled'],Content:['Pe
 const DOCSTATUS={Invoice:['Issued','Cancelled'],Quotation:['Draft','Sent','Accepted','Rejected']};
 const ORG_COLS=['ID','Name','Client','BillingName','Contact','Phone','Email','Website','City','GSTIN','Address','Notes'];
 const NUMK=['Budget','HandsOn','Inv1Pct','Amount','GST','Total','Rate','Investment','Payable'];
-const LABEL={IsInvestor:'Is an investor? (can hold project shares and get payouts)',FundProject:'Project fund of',PaidBy:'Paid by',Investor1:'Investor 1 (team member)',Investor2:'Investor 2 (team member)',JoinDate:'Joined on',Role:'Role / designation',HandsOn:'Hands-on (team share)',Inv1Pct:'Investor 1 share %',PaidTo:'Paid to',DesignedBy:'Designed by',AdSet:'Ad set',PaymentDate:'Payment date',StartDate:'Start date',EndDate:'End date',PaidFor:'Paid for',Rate:'Rate (₹)',GST:'GST 18%',
+const LABEL={IsInvestor:'Is an investor? (can hold project shares and get payouts)',FundProject:'Project fund of',PaidBy:'Paid by',Investor1:'Investor 1 (team member)',Investor2:'Investor 2 (team member)',JoinDate:'Joined on',Role:'Role / designation',HandsOn:'Hands-on (not counted in profit)',Inv1Pct:'Investor 1 share %',PaidTo:'Paid to',DesignedBy:'Designed by',AdSet:'Ad set',PaymentDate:'Payment date',StartDate:'Start date',EndDate:'End date',PaidFor:'Paid for',Rate:'Rate (₹)',GST:'GST 18%',
   BillingName:'Billing name on documents (Enter = new line)',GSTIN:'GSTIN',InvoiceNo:'Against invoice',ReceiptNo:'Receipt no.',No:'No.',ValidDate:'Valid till',Budget:'Project value (₹)',Amount:'Amount (₹)',Total:'Total (₹)',Name:'Client name (short)',Project:'Project name',Kind:'Type (an Asset is not deducted from profit)',FundedBy:'Settled by (for assets)',OldNo:'Old number',OldReceiptNo:'Old receipt no.',FromDate:'Period from',ToDate:'Period to',Payable:'Amount payable (₹)',Investment:'Investment amount (₹)',InvestDate:'Invested on',Structure:'Payout / return structure',Frequency:'Payout period',PayType:'Payment type',Member:'Team member',ReasonOther:'Reason (type it)'};
 /* labels that differ per sheet */
 const FLABEL={Payouts:{Member:'Investor',Plan:'Payout structure',Project:'Project (for profit-share payouts)',Amount:'Amount paid (₹)',Date:'Payment date',Payable:'Amount payable for this period (₹)',Status:'Payment status'},
@@ -265,8 +265,8 @@ function calc(){
   const by=a=>a.reduce((m,x)=>{(m[x.Project]=m[x.Project]||[]).push(x);return m},{});
   const pay=by(D.Payments),exp=by(D.Expenses.concat(teamAlloc(),cexpAlloc())),po=by(D.Payouts.filter(paidPO)),ad=by(D.Ads);
   return D.Projects.map(p=>{
-    const rec=sum(pay[p.Project]||[],'Amount'),sp=sum(exp[p.Project]||[],'Amount'),ho=+p.HandsOn||0;
-    const pct=p.Inv1Pct===''?75:+p.Inv1Pct,profit=rec-sp-ho,bal=(+p.Budget||0)-rec,pos=po[p.Project]||[];
+    const rec=sum(pay[p.Project]||[],'Amount'),sp=sum(exp[p.Project]||[],'Amount');
+    const pct=p.Inv1Pct===''?75:+p.Inv1Pct,profit=rec-sp,bal=(+p.Budget||0)-rec,pos=po[p.Project]||[];
     return {...p,Received:rec,Spent:sp,Balance:bal,Profit:profit,Margin:rec?Math.round(profit/rec*100):0,
       Inv1:profit*pct/100,Inv2:profit*(100-pct)/100,
       Paid1:sum(pos.filter(x=>x.Investor==='Investor 1'),'Amount'),Paid2:sum(pos.filter(x=>x.Investor==='Investor 2'),'Amount'),
@@ -395,8 +395,8 @@ function dashboard(){
   const P=calc().filter(inM),billed=sum(P,'Budget'),got=sum(P,'Received'),due=Math.max(0,billed-got);
   const PAY=D.Payments.filter(inM).map(p=>({...p,Client:payClient(p)})),rec=sum(PAY,'Amount');
   const TP=D.TeamPay.filter(inM),tp=sum(TP.filter(paidTP),'Amount'),tpPend=sum(TP.filter(p=>!paidTP(p)),'Amount');
-  const pex=sum(D.Expenses.filter(inM),'Amount'),ho=sum(P,'HandsOn'),co=sum(opEx(D.CompanyExp.filter(inM)),'Amount'),assets=sum(expInv(D.CompanyExp.filter(inM)),'Amount');
-  const cost=pex+tp+ho+co,net=rec-cost;
+  const pex=sum(D.Expenses.filter(inM),'Amount'),co=sum(opEx(D.CompanyExp.filter(inM)),'Amount'),assets=sum(expInv(D.CompanyExp.filter(inM)),'Amount');
+  const cost=pex+tp+co,net=rec-cost;
   const PO=D.Payouts.filter(inM),poPaid=sum(PO.filter(paidPO),'Amount');
   const INVm=docs('Invoice').filter(inM).map(invCalc).filter(d=>d.State!=='Cancelled');
   const INV=docs('Invoice').map(invCalc).filter(d=>d.State!=='Cancelled');
@@ -437,7 +437,7 @@ function dashboard(){
   </section>
   <div class="stats">
     ${stat('Received '+perS,inr(rec),'in',`${PAY.length} payment${PAY.length===1?'':'s'}${rec!==got?' · incl. earlier work':''}`)}
-    ${stat('Costs '+perS,inr(cost),'',`${inr(pex+ho)} project · ${inr(tp)} team · ${inr(co)} company`)}
+    ${stat('Costs '+perS,inr(cost),'',`${inr(pex)} project · ${inr(tp)} team · ${inr(co)} company`)}
     ${stat('Net profit '+perS,inr(net),net<0?'due':'in',assets?`${inr(assets)} paid by investors, not deducted`:'received minus costs')}
     ${stat('Invoiced '+perS,inr(sum(INVm,'Total')),'',`${INVm.length} invoice${INVm.length===1?'':'s'} · ${inr(sum(INVm,'Balance'))} unpaid`)}
     ${stat('Team payments '+perS,inr(tp),'',`${TP.filter(paidTP).length} paid${tpPend?' · '+inr(tpPend)+' pending':''}`)}
@@ -799,7 +799,7 @@ function teamProject(id,name){
   const pos=D.Payouts.filter(x=>x.Project===p.Project&&paidPO(x)&&slots.includes(x.Investor)).sort((a,b)=>String(b.Date).localeCompare(a.Date));
   openSheet(p.Project,`<div class="full">
     <div class="muted" style="margin-bottom:12px">${esc([p.Client,p.Type,p.Organization,'Started '+fmtD(p.Date)].filter(Boolean).join(' · '))} <span class="pill ${PILL[p.Status]??''}">${esc(p.Status)}</span></div>
-    <div class="stats">${stat('Project value',inr(p.Budget))}${stat('Received',inr(p.Received),'in',p.Balance>0?inr(p.Balance)+' still to come from the client':'fully received')}${stat('Costs',inr(p.Spent),'',p.HandsOn?'+ '+inr(p.HandsOn)+' team share':'')}${stat('Profit',inr(p.Profit),p.Profit<0?'due':'in',p.Margin+'% margin')}</div>
+    <div class="stats">${stat('Project value',inr(p.Budget))}${stat('Received',inr(p.Received),'in',p.Balance>0?inr(p.Balance)+' still to come from the client':'fully received')}${stat('Costs',inr(p.Spent))}${stat('Profit',inr(p.Profit),p.Profit<0?'due':'in',p.Margin+'% margin')}</div>
     <div class="stats">${stat(self?'Your share':'Share',inr(k.Share),k.Share<0?'due':'',k.Pct+'% of the profit')}${stat('Paid out',inr(k.Paid),'in')}${stat(self?'Still to receive':'Still to pay out',inr(k.Due),k.Due>0?'due':'')}</div>
     <h3>Payments received from the client</h3>${table(pays,[['Date','Date','date'],['Mode','Mode'],['Amount','Amount','money',{color:'in'}]],{total:['Amount'],empty:'No payments received yet.'})}
     <h3 style="margin-top:18px">Project costs</h3>${table(exps,[['Date','Date','date'],['Category','Category','text',{sub:'PaidTo'}],['Amount','Amount','money']],{total:['Amount'],empty:'No costs recorded.'})}
@@ -814,12 +814,11 @@ function projectPage(){
   if(!p){main(`<a class="back" href="#projects">${ico('back')}All projects</a><div class="empty">There is no project called ${esc(n)}.</div>`);return}
   const nd=(a,k='Date')=>a.slice().sort((x,y)=>String(y[k]).localeCompare(x[k]));
   const pays=nd(D.Payments.filter(x=>x.Project===n)),INV=docs('Invoice').filter(d=>d.Project===n).map(invCalc),tasks=nd(D.Content.filter(c=>c.Project===n)).map(c=>({...c,...taskPay(c)}));
-  const cx=D.CompanyExp.filter(e=>chargeTo(e)===n),other=D.CompanyExp.filter(e=>e.Project===n&&chargeTo(e)!==n),ho=+p.HandsOn||0;
+  const cx=D.CompanyExp.filter(e=>chargeTo(e)===n),other=D.CompanyExp.filter(e=>e.Project===n&&chargeTo(e)!==n);
   const rows=nd([].concat(
     D.Expenses.filter(x=>x.Project===n).map(x=>({...x,What:x.Category||'Project cost',Who:x.PaidTo,Src:'Project cost',Cat:x.Category||'Other',By:''})),
     teamAlloc().filter(x=>x.Project===n).map(x=>({...x,What:'Team payment',Who:x.PaidTo,Src:'Team payment',Cat:'Team payments',By:''})),
-    cx.map(e=>({...e,What:e.Reason||'Company expense',Who:e.PaidTo,Src:'Company expense',Cat:'Company expense',By:coverText(e)})),
-    ho?[{ID:'ho',Date:p.Date,What:'Team share (set on the project)',Who:'',Src:'Team share',Cat:'Team share',By:'',Amount:ho}]:[]));
+    cx.map(e=>({...e,What:e.Reason||'Company expense',Who:e.PaidTo,Src:'Company expense',Cat:'Company expense',By:coverText(e)}))));
   const cost=sum(rows,'Amount'),src=k=>sum(rows.filter(r=>r.Src===k),'Amount');
   const split=['Company','Project fund','Investors','Not set'].map(k=>[k,sum(cx.filter(e=>cover(e).Type===k),'Amount')]).filter(x=>x[1]).map(([k,v])=>`${k==='Company'?'company money':k.toLowerCase()} ${inr(v)}`).join(' · ');
   const pct=(a,b)=>b>0?Math.max(0,Math.min(100,Math.round(a/b*100))):0,bar=(v,c)=>`<div style="height:9px;background:#0001;border-radius:6px;overflow:hidden;margin:6px 0 2px"><i style="display:block;height:100%;width:${v}%;background:${c}"></i></div>`;
@@ -846,11 +845,11 @@ function projectPage(){
   <div class="stats">${stat('Profit',inr(p.Profit),p.Profit<0?'due':'in',p.Margin+'% margin')}${stat('Hands-on money',inr(p.HandsOnMoney),p.HandsOnMoney<0?'due':'','received − costs − payouts')}${stat('Profit shares',inr(shareT),'',names.length?names.length+' investor'+(names.length>1?'s':''):'no investor')}${stat('Shared so far',inr(sharedT),'in',dueT>0?inr(dueT)+' still to pay out':shareT?'all paid out':'')}</div>
   <div id="pj-money" class="grid2 mt"><section class="panel"><h2>Money statement</h2><table class="calc">
     ${L('Project value',inr(p.Budget))}${L('Received from client',inr(p.Received),{cls:'in'})}${L('Balance still to collect',inr(Math.max(0,p.Balance)),{cls:p.Balance>0?'due':''})}
-    ${L('Project costs','− '+inr(src('Project cost')),{sub:1})}${L('Team payments','− '+inr(src('Team payment')),{sub:1})}${L('Company expenses','− '+inr(src('Company expense')),{sub:1,note:split})}${ho?L('Team share (hands-on set on project)','− '+inr(ho),{sub:1}):''}
+    ${L('Project costs','− '+inr(src('Project cost')),{sub:1})}${L('Team payments','− '+inr(src('Team payment')),{sub:1})}${L('Company expenses','− '+inr(src('Company expense')),{sub:1,note:split})}
     ${L('Total spent','− '+inr(cost),{tot:1})}${L('Profit (received − spent)',inr(p.Profit),{tot:1,cls:p.Profit<0?'due':'in'})}
     ${invs.map(r=>L(`${esc(r.Name)} · ${r.Pct}% share`,inr(r.Share),{sub:1,note:r.Role+' · paid '+inr(r.Paid)+(r.Due>0.5?' · due '+inr(r.Due):'')})).join('')}
     ${L('Total shared with investors (paid out)',inr(paidAll),{tot:1})}
-    ${L('Hands-on money (received − spent − payouts paid)',inr(p.HandsOnMoney),{tot:1,cls:p.HandsOnMoney<0?'due':'',note:ho?'before the team share of '+inr(ho)+' set on the project':''})}</table></section>
+    ${L('Hands-on money (received − spent − payouts paid)',inr(p.HandsOnMoney),{tot:1,cls:p.HandsOnMoney<0?'due':''})}</table></section>
     <section class="panel"><h2>Progress</h2>
       <div style="display:flex;justify-content:space-between"><span>Collected from client</span><b>${inr(p.Received)} of ${inr(p.Budget)}</b></div>${bar(pct(p.Received,p.Budget),'#0F7B5F')}<div class="muted" style="font-size:13px">${p.Budget>0?pct(p.Received,p.Budget)+'% collected':'no project value set'}</div>
       <div style="display:flex;justify-content:space-between;margin-top:14px"><span>Spent of money received</span><b>${inr(cost)} of ${inr(p.Received)}</b></div>${bar(pct(cost,p.Received),cost>p.Received?'#C0392B':'#ED5B2D')}<div class="muted" style="font-size:13px">${p.Received>0?pct(cost,p.Received)+'% of what came in':'nothing received yet'}</div>
@@ -860,7 +859,7 @@ function projectPage(){
   ${sec('pj-inv','Investors – profit share',`${table(invs,[['Name','Investor','text',{sub:'Role'}],['Pct','Share %','pct'],['Share','Share','money'],['Paid','Shared (paid)','money',{color:'in'}],['Due','Still to pay','money']],{total:['Share','Paid','Due'],empty:'No investor assigned. Edit the project and choose Investor 1 / Investor 2.',href:r=>'member/'+r.Name})}
     <h3 style="margin:16px 0 6px">Payouts made on this project</h3>${table(po,[['Who','Investor'],['Date','Date','date'],['Status','Status','pill'],['Amount','Amount','money',{color:'in'}]],{total:['Amount'],empty:'No payouts recorded.'})}
     <h3 style="margin:16px 0 6px">Expenses covered by investors</h3><p class="muted" style="margin:0 0 6px">Paid from the investor's own pocket for this project – not deducted from company money.</p>${table(ie,[['Reason','Expense','text',{sub:'PaidTo'}],['Date','Date','date'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount'],empty:'No investor-paid expenses on this project.'})}`)}
-  ${sec('pj-spend','Spending – what was spent',`<div class="stats" style="margin-bottom:12px">${stat('Project costs',inr(src('Project cost')))}${stat('Team payments',inr(src('Team payment')))}${stat('Company expenses',inr(src('Company expense')),'',split||'none charged here')}${ho?stat('Team share',inr(ho),'','set on the project'):''}</div>
+  ${sec('pj-spend','Spending – what was spent',`<div class="stats" style="margin-bottom:12px">${stat('Project costs',inr(src('Project cost')))}${stat('Team payments',inr(src('Team payment')))}${stat('Company expenses',inr(src('Company expense')),'',split||'none charged here')}</div>
     ${rows.length?`<div class="grid2"><div><h3 style="margin:0 0 6px">Where it went</h3>${hbarsH(grpSum(rows,'Cat','Amount'))}</div><div></div></div>`:''}
     <h3 style="margin:16px 0 6px">Every cost on this project</h3>${table(rows,[['What','What','text',{sub:'Who'}],['Date','Date','date'],['Src','Type'],['By','Covered by'],['Amount','Amount','money']],{total:['Amount'],empty:'Nothing spent on this project yet.',
       act:A?r=>/^(ho|tp-)/.test(String(r.ID))?'':(r.Src==='Company expense'?more([['Edit',`edit('CompanyExp','${r.ID}')`],['Delete',`del('CompanyExp','${r.ID}')`]]):more([['Edit',`edit('Expenses','${r.ID}')`],['Delete',`del('Expenses','${r.ID}')`]])):null})}
