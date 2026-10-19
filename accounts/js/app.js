@@ -266,10 +266,10 @@ function calc(){
   const pay=by(D.Payments),exp=by(D.Expenses.concat(teamAlloc(),cexpAlloc())),po=by(D.Payouts.filter(paidPO)),ad=by(D.Ads);
   return D.Projects.map(p=>{
     const rec=sum(pay[p.Project]||[],'Amount'),sp=sum(exp[p.Project]||[],'Amount');
-    const pct=p.Inv1Pct===''?75:+p.Inv1Pct,profit=rec-sp,bal=(+p.Budget||0)-rec,pos=po[p.Project]||[];
+    const bal=(+p.Budget||0)-rec,pos=po[p.Project]||[],profit=sum(pos,'Amount');   // profit = what has actually been paid out to the investors
     return {...p,Received:rec,Spent:sp,Balance:bal,Profit:profit,Margin:rec?Math.round(profit/rec*100):0,
-      Inv1:profit*pct/100,Inv2:profit*(100-pct)/100,
       Paid1:sum(pos.filter(x=>x.Investor==='Investor 1'),'Amount'),Paid2:sum(pos.filter(x=>x.Investor==='Investor 2'),'Amount'),
+      Inv1:sum(pos.filter(x=>x.Investor==='Investor 1'),'Amount'),Inv2:sum(pos.filter(x=>x.Investor==='Investor 2'),'Amount'),
       HandsOnMoney:rec-sp-sum(pos,'Amount'),
       Age:bal>0?daysSince(p.Date):0,
       AdTracked:sum(ad[p.Project]||[],'Total'),AdBooked:sum((exp[p.Project]||[]).filter(e=>/Ads/.test(e.Category)),'Amount')};
@@ -827,7 +827,7 @@ function projectPage(){
   const A=adm(),ID=p.ID,ie=nd(D.CompanyExp.filter(e=>(e.Project===n||chargeTo(e)===n)&&cover(e).Type==='Investors')).map(expRow),po=nd(D.Payouts.filter(x=>x.Project===n)).map(x=>({...x,Who:poMember(x)||x.Investor||''}));
   const alerts=[];
   if(p.Balance>0&&p.Age>30&&p.Status==='Active')alerts.push(`The client still owes ${inr(p.Balance)} – ${p.Age} days since the project started.`);
-  if(p.Profit<0)alerts.push(`This project is at a loss of ${inr(-p.Profit)}.`);
+  if(p.Received-p.Spent<0)alerts.push(`This project is at a loss of ${inr(p.Spent-p.Received)}.`);
   if(!names.length&&p.Status!=='Cancelled')alerts.push('No investor is assigned – nobody gets a profit share. Edit the project and choose Investor 1 / Investor 2.');
   if(p.AdTracked>p.AdBooked+1)alerts.push(`Ads tracked for this project: ${inr(p.AdTracked)}, but only ${inr(p.AdBooked)} is booked as a project cost.`);
   if(p.Budget>0&&p.Received>p.Budget+1)alerts.push(`Received ${inr(p.Received-p.Budget)} more than the project value.`);
@@ -846,7 +846,7 @@ function projectPage(){
   <div id="pj-money" class="grid2 mt"><section class="panel"><h2>Money statement</h2><table class="calc">
     ${L('Project value',inr(p.Budget))}${L('Received from client',inr(p.Received),{cls:'in'})}${L('Balance still to collect',inr(Math.max(0,p.Balance)),{cls:p.Balance>0?'due':''})}
     ${L('Project costs','− '+inr(src('Project cost')),{sub:1})}${L('Team payments','− '+inr(src('Team payment')),{sub:1})}${L('Company expenses','− '+inr(src('Company expense')),{sub:1,note:split})}
-    ${L('Total spent','− '+inr(cost),{tot:1})}${L('Profit (received − spent)',inr(p.Profit),{tot:1,cls:p.Profit<0?'due':'in'})}
+    ${L('Total spent','− '+inr(cost),{tot:1})}${L('Profit (paid out to investors)',inr(p.Profit),{tot:1,cls:p.Profit<0?'due':'in'})}
     ${invs.map(r=>L(`${esc(r.Name)} · ${r.Pct}% share`,inr(r.Share),{sub:1,note:r.Role+' · paid '+inr(r.Paid)+(r.Due>0.5?' · due '+inr(r.Due):'')})).join('')}
     ${L('Total shared with investors (paid out)',inr(paidAll),{tot:1})}
     ${L('Hands-on money (received − spent − payouts paid)',inr(p.HandsOnMoney),{tot:1,cls:p.HandsOnMoney<0?'due':''})}</table></section>
@@ -1091,7 +1091,7 @@ function repHealth(){
   const P=calc(),names=new Set(P.map(p=>p.Project)),I=[],add=(hi,t)=>I.push([hi,t]);
   P.filter(p=>p.Balance>0&&p.Age>30).forEach(p=>add(p.Age>90,`<b>${esc(p.Project)}</b>: ${inr(p.Balance)} outstanding for ${p.Age} days.`));
   P.filter(p=>p.Status==='Completed'&&p.Balance>0).forEach(p=>add(1,`<b>${esc(p.Project)}</b> is marked Completed but ${inr(p.Balance)} is still unpaid.`));
-  P.filter(p=>p.Profit<0).forEach(p=>add(1,`<b>${esc(p.Project)}</b> is at a loss of ${inr(-p.Profit)} (spent ${inr(p.Spent)}, received ${inr(p.Received)}).`));
+  P.filter(p=>p.Received-p.Spent<0).forEach(p=>add(1,`<b>${esc(p.Project)}</b> is at a loss of ${inr(p.Spent-p.Received)} (spent ${inr(p.Spent)}, received ${inr(p.Received)}).`));
   P.filter(p=>p.Balance<0).forEach(p=>add(1,`<b>${esc(p.Project)}</b>: received ${inr(-p.Balance)} more than the project value.`));
   P.map(p=>p.Project).filter((n,i,a)=>a.indexOf(n)!==i).forEach(n=>add(1,`Two projects share the name <b>${esc(n)}</b>.`));
   const cIds=new Set(D.Content.map(c=>String(c.ID)));
