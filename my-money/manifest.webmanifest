@@ -1,0 +1,31 @@
+{
+ "name": "My Money",
+ "short_name": "My Money",
+ "description": "Track \u00b7 Plan \u00b7 Grow",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#F6F6E9",
+ "theme_color": "#ED5B2D",
+ "icons": [
+  {
+   "src": "img/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "img/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "img/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
