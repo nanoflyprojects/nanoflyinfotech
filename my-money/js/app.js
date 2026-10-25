@@ -579,9 +579,21 @@
     }
   }
   function relogin() { try { localStorage.removeItem(KK) } catch (e) { } setSync('Password changed. Sign in again.', 'err'); showLogin(() => pull(true)) }
+  /* ---------- auto-update: when version.json changes on the host, every installed copy (phone app, PC app, browser) reloads itself ---------- */
+  async function checkUpdate() {
+    try {
+      if (dirty || pushing || $('#overlay').firstChild) return;
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; const v = String((await r.json()).v || ''); if (!v) return;
+      const cur = localStorage.getItem('MyMoney.ver'); localStorage.setItem('MyMoney.ver', v); if (!cur || cur === v) return;
+      if (navigator.serviceWorker) { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(x => x.update().catch(() => { }))) }
+      if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))) }
+      toast('New version found. Updating…'); setTimeout(() => location.reload(), 900)
+    } catch (e) { }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate() }); setInterval(checkUpdate, 30 * 60 * 1000);
   function boot() {
   render(true);
-    if (API) pull(); else setSync('Saved in this browser only. Add your API_URL in js/config.js to use Google Sheets.', '');
+    checkUpdate(); if (API) pull(); else setSync('Saved in this browser only. Add your API_URL in js/config.js to use Google Sheets.', '');
     setTimeout(() => { const al = alerts().filter(a => a.r); if (al.length) toast(al.length + ' payment' + (al.length > 1 ? 's' : '') + ' need attention. Open the bell to see them.'); systemNotify() }, 900);
   }
   if (API && !getKey()) showLogin(boot); else boot();
