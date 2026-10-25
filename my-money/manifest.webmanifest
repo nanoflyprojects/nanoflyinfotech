@@ -27,5 +27,12 @@
    "type": "image/png",
    "purpose": "maskable"
   }
- ]
+ ],
+ "id": "./",
+ "lang": "en",
+ "categories": [
+  "finance",
+  "productivity"
+ ],
+ "dir": "ltr"
 }
