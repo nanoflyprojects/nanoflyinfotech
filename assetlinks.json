@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.nanoflyinfotech.twa",
+        "sha256_cert_fingerprints": ["50:B3:3D:C5:9B:7C:A0:65:6C:A3:0C:42:E8:72:CF:A3:6D:87:77:AB:0B:F4:A6:20:9C:F6:47:1E:A9:43:38:AA"]
+      }
+    }]
