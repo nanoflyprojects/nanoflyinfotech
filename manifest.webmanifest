@@ -1,0 +1,24 @@
+{
+  "name": "NanoFLY InfoTech",
+  "short_name": "NanoFLY",
+  "description": "Digital marketing, websites, software and training from Madurai.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "lang": "en-IN",
+  "background_color": "#F6F6E9",
+  "theme_color": "#ED5B2D",
+  "icons": [
+    {
+      "src": "/assets/img/brand/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/img/brand/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

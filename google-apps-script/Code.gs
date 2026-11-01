@@ -115,7 +115,7 @@ function sendAutoReply(data) {
     "Here's a copy of what you sent us:\n" +
     "Inquiry Type: " + (data.user_subject || "-") + "\n" +
     "Message: " + (data.message || "-") + "\n\n" +
-    "If it's urgent, you can also reach us on WhatsApp at +91 94877 72786 / +91 93442 29558.\n\n" +
+    "If it's urgent, you can also reach us on WhatsApp at +91 94877 72786.\n\n" +
     "Best regards,\n" +
     "Nano Fly InfoTech";
 
