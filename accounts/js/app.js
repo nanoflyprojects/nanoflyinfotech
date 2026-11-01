@@ -275,7 +275,12 @@ function calc(){
       AdTracked:sum(ad[p.Project]||[],'Total'),AdBooked:sum((exp[p.Project]||[]).filter(e=>/Ads/.test(e.Category)),'Amount')};
   });
 }
+/* The ad wallet is only the recharge / campaign ledger: recharges add money, ad campaigns
+   (incl. GST) take it out. Meta Ads / Google Ads entries in Project costs are project costs
+   and do not change this wallet. */
 const wallet=()=>sum(D.Recharges,'Amount')-sum(D.Ads,'Total');
+const walletParts=()=>({in:sum(D.Recharges,'Amount'),out:sum(D.Ads,'Total')});
+function rechargeWallet(preset={}){edit('Recharges',null,{Date:today(),Platform:'Meta',...preset},'Recharge the ad wallet')}
 
 /* ---------- Routing ---------- */
 function go(h){if(location.hash==='#'+h)render();else location.hash=h}
@@ -320,7 +325,7 @@ function moreSheet(){
 }
 function buildNewMenu(){
   $('newbtn').parentElement.hidden=!adm();
-  $('newmenu').innerHTML=[['invoice','Invoice',"newDoc('Invoice')"],['wallet','Payment received',"edit('Payments')"],['quote','Quotation',"newDoc('Quotation')"],['users','Client',"edit('Clients')"],['building','Organization',"edit('Organizations')"],['folder','Project',"edit('Projects')"],['out','Project expense',"edit('Expenses')"],['out','Company expense',"edit('CompanyExp')"],
+  $('newmenu').innerHTML=[['invoice','Invoice',"newDoc('Invoice')"],['wallet','Payment received',"edit('Payments')"],['wallet','Wallet recharge',"rechargeWallet()"],['quote','Quotation',"newDoc('Quotation')"],['users','Client',"edit('Clients')"],['building','Organization',"edit('Organizations')"],['folder','Project',"edit('Projects')"],['out','Project expense',"edit('Expenses')"],['out','Company expense',"edit('CompanyExp')"],
     ['task','Work item (task)',"edit('Content')"],['coins','Team payment',"payTeam()"],['team','Investor payout',"edit('Payouts')"]]
     .map(([i,l,f])=>`<button onclick="closeMenus();${f}">${ico(i)}${l}</button>`).join('');
 }
@@ -1010,8 +1015,11 @@ function expenses(){
       {total:['Amount'],empty:'No company expenses yet.',act:adm()?r=>more([['Edit',`edit('CompanyExp','${r.ID}')`],['Delete',`del('CompanyExp','${r.ID}')`]]):null})}</section>`;
   }
   else{
-    const A=D.Ads.filter(inFY),w=wallet();
-    h=`<div class="stats">${stat('Wallet balance',inr(w),w<500?'due':'','all time')}${stat('Recharged',inr(sum(D.Recharges.filter(inFY),'Amount')))}${stat('Ad spend incl. GST',inr(sum(A,'Total')))}${stat('Running ads',A.filter(a=>a.Result==='Running').length)}</div>`+
+    const A=D.Ads.filter(inFY),w=wallet(),W=walletParts();
+    h=`${adm()?`<div class="toolbar"><span class="muted" style="font-weight:500">Recharges add money to the ad wallet; ad spend takes it out. Record the money you put into Meta / Google as a recharge.</span><span class="spacer"></span><button class="btn primary" onclick="rechargeWallet()">${ico('wallet')}Recharge wallet</button><button class="btn" onclick="edit('Ads',null,{Platform:'Meta'})">${ico('plus')}Add ad spend</button></div>`:''}
+    ${w<500&&adm()?`<div class="notice warn"><b>Wallet ${w<0?'is negative':'is low'} · ${inr(w)}</b><br>Already put money into Meta / Google? Record it with <b>Recharge wallet</b>. An ad expense only takes money out of the wallet – it does not add a recharge. <button class="btn sm" onclick="rechargeWallet()">Recharge now</button></div>`:''}
+    <div class="stats">${stat('Wallet balance',inr(w),w<500?'due':'',`all time · ${inr(W.in)} in − ${inr(W.out)} out`)}${stat('Recharged',inr(sum(D.Recharges.filter(inFY),'Amount')),'',perLabel(FY))}${stat('Ad spend incl. GST',inr(sum(A,'Total')),'',perLabel(FY))}${stat('Running ads',A.filter(a=>a.Result==='Running').length)}</div>
+      <p class="muted" style="margin:-4px 0 14px">Only the ad campaigns below reduce the wallet. Meta Ads / Google Ads entries added under Project costs are project costs and do not change this wallet.</p>`+
       listPanel('Ads','Ad campaigns',byDate(D.Ads),[['AdSet','Ad','text',{sub:r=>r.Project+' · '+r.Platform}],['StartDate','Started','date'],['Result','Result','pill'],['Total','Spent incl. GST','money']])+
       listPanel('Recharges','Wallet recharges',byDate(D.Recharges),[['Project','Project','text',{sub:'Platform'}],['Date','Date','date'],['Amount','Amount','money']]);
   }
@@ -1260,8 +1268,8 @@ function edit(name,id,preset={},title){
       if(o.Status==='Pending')o.Amount=o.Amount||0;
     }
     if(name!=='Projects'&&o.Project&&!pl.includes(o.Project)&&!confirm(`There is no project called "${o.Project}". Save anyway?`))throw new Error('Not saved.');
-    await api('saveRow',TOKEN,name,o);toast('Saved');await load();
-  });
+    await api('saveRow',TOKEN,name,o);toast(name==='Recharges'?'Wallet recharged':'Saved');await load();
+  },name==='Recharges'?'Save recharge':undefined);
   const q=n=>$('mb').querySelector(`[name=${n}]`);
   if(name==='Ads')q('Amount').oninput=()=>{const n=+q('Amount').value||0;q('GST').value=(n*.18).toFixed(2);q('Total').value=Math.round(n*1.18)};
   if(name==='CompanyExp'&&q('Kind')&&q('FundedBy')){const fl=q('FundedBy').closest('label'),sync=()=>{fl.style.display=q('Kind').value==='Asset'?'':'none'};q('Kind').onchange=()=>{if(q('Kind').value==='Asset'&&!q('FundedBy').value)q('FundedBy').value='Project fund';sync()};sync()}

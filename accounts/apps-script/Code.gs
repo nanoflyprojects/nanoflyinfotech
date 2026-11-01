@@ -48,6 +48,7 @@ function onOpen() {
     .addItem('2. Import existing data (one time)', 'importLegacy')
     .addItem('3. Create client records from projects', 'syncClients')
     .addItem('4. Restructure old records (renumber + tidy, makes a backup first)', 'restructureMenu')
+    .addItem('5. Align and tidy app sheets (columns, IDs, stray rows)', 'alignSheetsMenu')
     .addToUi();
 }
 
@@ -420,7 +421,7 @@ function saveRow(pin, n, obj) {
     }
     let oldTasks = '';
     const row = h.map(k => clean_(k, obj[k]));
-    if (isNew) sh.appendRow(row);
+    if (isNew) appendRecord_(sh, h, row);
     else {
       const r = findRow_(sh, obj.ID);
       if (!r) throw new Error('Record not found');
@@ -576,6 +577,7 @@ function read_(n) {
     h.forEach((k, i) => {
       let x = r[i];
       if (x instanceof Date) x = Utilities.formatDate(x, TZ, k === 'Time' ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
+      if (k === 'ID' && x !== '') x = String(x);   // old numeric IDs must stay comparable to the portal's text IDs
       o[k] = x;
     });
     return o;
@@ -586,8 +588,24 @@ function clean_(k, v) {
   if (/Date$/.test(k)) return new Date(v + 'T00:00:00');
   if (NUM.indexOf(k) > -1) return Number(v);
   const s = String(v).trim();
-  if (k === 'Tasks') return "'" + s;        // keep task IDs as text (an ID like 1234e567 would otherwise turn into a number)
+  if (k === 'ID' || k === 'Tasks') return "'" + s;   // keep IDs as text (an ID like 54656074 or 1234e567 would otherwise turn into a number)
   return /^[=+@]/.test(s) ? "'" + s : s;   // block formula injection
+}
+/* Put a new record in the next free row after the last real (ID-bearing) record. A stray totals
+   row inside a sheet can no longer push new records below it or leave a gap in the data. */
+function appendRecord_(sh, h, row) {
+  const last = sh.getLastRow();
+  if (last < 2) { sh.getRange(2, 1, 1, h.length).setValues([row]); return; }
+  const v = sh.getRange(2, 1, last - 1, h.length).getValues();
+  let lastReal = 1;
+  v.forEach((r, i) => { if (String(r[0]).trim() !== '') lastReal = i + 2; });
+  let r = lastReal + 1;
+  while (r <= last) {
+    const rr = v[r - 2] || [];
+    if (rr.every(c => String(c).trim() === '')) break;
+    r++;
+  }
+  sh.getRange(r, 1, 1, h.length).setValues([row]);
 }
 function findRow_(sh, id) {
   if (sh.getLastRow() < 2) return 0;
@@ -754,6 +772,92 @@ function restructureMenu() {
   ui.alert('Done', JSON.stringify(r, null, 1).replace(/[{}"]/g, ''), ui.ButtonSet.OK);
 }
 function restructure(token) { requireAdmin_(token); return restructure_(); }
+
+/* ---------- Align and tidy the app sheets ----------
+ * Removes rows that have no ID (for example a totals row left inside App_Ads), keeps IDs as text
+ * (so 54656074 cannot turn into 5.47E+07), and applies consistent widths and alignment.
+ * A backup copy of any sheet whose rows are removed is made first. Safe to run again. */
+function alignSheetsMenu() {
+  const ui = SpreadsheetApp.getUi();
+  if (ui.alert('Align and tidy the app sheets?',
+    'This removes stray rows without an ID (such as a totals row inside App_Ads), keeps every ID as text and sets column widths / alignment. A backup copy is made of any sheet where rows are removed.',
+    ui.ButtonSet.OK_CANCEL) !== ui.Button.OK) return;
+  const r = alignSheets_();
+  ui.alert('Done', 'Sheets aligned: ' + r.sheets + '\nStray rows removed: ' + r.rows + '\nIDs kept as text: ' + r.ids, ui.ButtonSet.OK);
+}
+function alignSheets_() {
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    migrate_();
+    const ss = SpreadsheetApp.getActive();
+    const stamp = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm.ss');
+    const W = { ID: 90, Date: 105, Time: 135, Name: 190, Client: 170, Project: 230, Organization: 200, Type: 110, Status: 105, Category: 130, Platform: 90, AdSet: 190, Amount: 110, Budget: 115, GST: 95, Total: 115, Rate: 105, Investment: 115, Payable: 115, Inv1Pct: 85, HandsOn: 110, Mode: 105, ReceiptNo: 130, InvoiceNo: 130, No: 125, OldNo: 115, OldReceiptNo: 135, Phone: 125, Email: 180, Website: 180, City: 120, GSTIN: 145, Address: 230, BillingName: 230, Contact: 150, Notes: 280, Items: 420, PayType: 105, Member: 150, Investor: 150, Tasks: 120, Structure: 130, Frequency: 110, IsInvestor: 90, Kind: 90, FundedBy: 125, FundProject: 220, PaidBy: 170, PaidFor: 190, ReasonOther: 190, Reason: 230, PaidTo: 150, Content: 280, DesignedBy: 150, Result: 105, StartDate: 110, EndDate: 110, JoinDate: 110, PaymentDate: 110, FromDate: 110, ToDate: 110, ValidDate: 110, InvestDate: 110 };
+    const CENTRE = ['Status', 'Type', 'Platform', 'Result', 'Kind', 'IsInvestor', 'PayType', 'Frequency', 'Mode', 'Structure'];
+    const WRAP = ['Notes', 'Address', 'BillingName', 'Reason', 'ReasonOther', 'PaidFor'];
+    let sheets = 0, rows = 0, ids = 0;
+    Object.keys(SCHEMA).forEach(n => {
+      if (n === 'Log') return;                         // Log starts with Time, not ID
+      const sh = sh_(n), h = SCHEMA[n];
+      let last = sh.getLastRow(), backedUp = false;
+      const backup = () => {
+        if (backedUp) return;
+        sh.copyTo(ss).setName(('Backup ' + stamp + ' – ' + PREFIX + n).slice(0, 99)).hideSheet();
+        backedUp = true;
+      };
+      if (last > 1) {
+        const idsNow = sh.getRange(2, 1, last - 1, 1).getValues();
+        const blanks = [];
+        idsNow.forEach((r, i) => { if (String(r[0]).trim() === '') blanks.push(i + 2); });
+        if (blanks.length) {
+          backup();
+          for (let i = blanks.length - 1; i >= 0; i--) sh.deleteRow(blanks[i]);
+          rows += blanks.length; last = sh.getLastRow();
+        }
+      }
+      sh.getRange(1, 1, 1, h.length).setFontWeight('bold').setBackground('#291B25').setFontColor('#ffffff')
+        .setVerticalAlignment('middle').setHorizontalAlignment('left');
+      sh.setFrozenRows(1);
+      h.forEach((k, i) => {
+        sh.setColumnWidth(i + 1, W[k] || 130);
+        if (last < 2) return;
+        const col = sh.getRange(2, i + 1, last - 1, 1);
+        col.setVerticalAlignment('middle');
+        if (k === 'ID') {
+          col.setNumberFormat('@').setHorizontalAlignment('center');
+          const vals = col.getValues();
+          const numeric = vals.filter(r => r[0] !== '' && typeof r[0] !== 'string');
+          if (numeric.length) {
+            backup();
+            ids += numeric.length;
+            col.setValues(vals.map(r => [String(r[0] === null ? '' : r[0])]));
+          }
+        } else if (/Date$/.test(k)) {
+          col.setNumberFormat('dd-MMM-yyyy').setHorizontalAlignment('center');
+        } else if (NUM.indexOf(k) > -1) {
+          col.setNumberFormat(k === 'Inv1Pct' ? '0.##' : '#,##0.00').setHorizontalAlignment('right');
+        } else {
+          col.setHorizontalAlignment(CENTRE.indexOf(k) > -1 ? 'center' : 'left');
+          if (WRAP.indexOf(k) > -1) col.setWrap(true);
+        }
+      });
+      sheets++;
+    });
+    const st = ss.getSheetByName(SETTINGS_SHEET);
+    if (st) {
+      const last = st.getLastRow();
+      st.getRange(1, 1, 1, 2).setFontWeight('bold').setBackground('#291B25').setFontColor('#ffffff').setVerticalAlignment('middle');
+      st.setFrozenRows(1); st.setColumnWidth(1, 220); st.setColumnWidth(2, 420);
+      if (last > 1) {
+        st.getRange(2, 1, last - 1, 2).setVerticalAlignment('middle');
+        st.getRange(2, 1, last - 1, 1).setNumberFormat('@').setHorizontalAlignment('left');
+        st.getRange(2, 2, last - 1, 1).setNumberFormat('@');
+      }
+      sheets++;
+    }
+    log_('Align', 'All', '', 'sheets ' + sheets + ', rows removed ' + rows + ', IDs fixed ' + ids);
+    return { sheets: sheets, rows: rows, ids: ids };
+  } finally { lock.releaseLock(); }
+}
 function restructure_() {
   const lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {

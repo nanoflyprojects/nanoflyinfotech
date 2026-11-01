@@ -27,10 +27,13 @@ apps-script/Code.gs   backend for your Google Sheet (paste into Apps Script)
 - **Team** – your company members / investors. Each project has an *Investor 1* and *Investor 2* (picked from the Team list). A member with a **Team member** login sees ONLY the projects they hold a share in: value, received, costs, profit, their %, their share, what has been paid out and what is still due, plus the payments / costs / payouts behind each project. Admins open any member to see exactly what that member sees.
 - **Payments** – link to invoices, issue numbered receipts, filter by month.
 - **Projects** – "Repeat next month" for monthly retainers.
-- **Expenses** – project costs, company expenses, team payouts, design work, ads & wallet (ad platform: Google or Meta).
+- **Expenses** – project costs, company expenses, team payouts, design work, ads & wallet (ad platform: Google or Meta). In *Ads & wallet*, use **Recharge wallet** for money you put into Meta / Google. The wallet is recharge minus ad campaigns (spent incl. GST). Meta Ads / Google Ads entries under *Project costs* are project costs and do not change the wallet.
 - **Company assets** – Expenses → Company expenses → *Add asset* (domain, hosting, laptop…). Choose who settles it: *Project fund*, *Investors (shared)* or a team member. Assets are **not** deducted from company profit (dashboard, monthly report).
 - **Reports** – printable monthly summary, investor shares, health check, activity log.
 - Search everything from the top bar (press **/**). Works on phone, tablet and desktop.
+
+## Profit (v5.5.2)
+Profit = what has actually been **paid out to the investors**. Money received that has not been paid out is *Hands-on money* (cash held for the project) – it is not profit and not a cost. A project with nothing paid out shows profit ₹0; each investor's share equals what was paid to them. The project's *Hands-on* field is kept for old data but no longer affects anything.
 
 ## Setup
 1. Google Sheet → Extensions → Apps Script → replace Code.gs with `apps-script/Code.gs`. Save.
@@ -138,3 +141,8 @@ The portal is an installable app (PWA) – one code base for Android, iPhone, Wi
 - **Project page** (`#project/<name>`): click any project in a list. One complete page (v5.5, no tabs): value, received, balance to collect, total spent, profit, hands-on money, profit shares and what has been shared; a full money statement; investors' shares and payouts; every cost with who covered it; payments and invoices; work. Quick-jump buttons at the top. Admins can mark a project completed / on hold from the ⋯ menu.
 - **Investor page**: new "Expenses covered" section – each expense an investor paid (their share when shared).
 - Investor logins receive only their own covered expenses and those charged to their projects (co-investor names are never sent) – redeploy `Code.gs` as a New version.
+
+## v5.7 – ad wallet recharge and sheet alignment
+- **Ads & wallet → Recharge wallet** records money added to the Meta / Google ad account. The wallet balance is **recharges − ad campaigns (spent incl. GST)**. Meta Ads / Google Ads entries in *Project costs* remain project costs and do not change the wallet.
+- **Sheet alignment**: update `apps-script/Code.gs`, then in the sheet run **NanoFLY App → 5. Align and tidy app sheets**. It removes rows that have no ID (for example a totals row inside `App_Ads`), keeps IDs as text so they cannot turn into `5.47E+07`, and sets consistent column widths and alignment. A backup sheet is made before any row is removed.
+- New records are now written into the next free row after the last real record, so a stray totals row can no longer push new rows below it.

@@ -80,7 +80,7 @@ textarea{min-height:84px;resize:vertical}
 .side-user span{display:block}
 .side-user .link{color:var(--on-dark);text-align:left}
 
-.top{grid-area:top;display:flex;align-items:center;gap:12px;padding:14px max(var(--pad),calc((100% - var(--maxw))/2 + var(--pad)));background:var(--bg);position:sticky;top:0;z-index:20;border-bottom:1px solid transparent}
+.top{grid-area:top;display:flex;align-items:center;gap:12px;min-width:0;padding:14px max(var(--pad),calc((100% - var(--maxw))/2 + var(--pad)));background:var(--bg);position:sticky;top:0;z-index:20;border-bottom:1px solid transparent}
 .top.scrolled{border-bottom-color:var(--line);background:#F6F6E9ee;backdrop-filter:blur(6px)}
 .brand-mark{display:none;width:32px;height:auto;flex:none}
 .top h1{font-size:24px;flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -238,6 +238,12 @@ table.t{width:100%;border-collapse:collapse;font-size:14px}
   .side-nav a span,.side-nav .count{display:none}
   .side-user{display:none}
   .grid2{grid-template-columns:minmax(0,1fr)}
+  /* the top bar has more than one row until the full sidebar fits again */
+  .top{flex-wrap:wrap;row-gap:8px}
+  .top h1{flex:1 1 auto}
+  .newwrap{order:4}
+  .search{order:5;flex:1 1 240px;width:auto;min-width:0}
+  .fy{order:6}
 }
 
 /* ---------- Phone ---------- */
