@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /nanowealth/admin
+Disallow: /nanowealth/admin.html
 
 Sitemap: https://nanoflyinfotech.com/sitemap.xml
