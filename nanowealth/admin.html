@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nano Wealth Admin</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="assets/icons/favicon-32.png">
+<link rel="stylesheet" href="css/brand.css"><link rel="stylesheet" href="css/app.css">
+<style>
+.pv{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}.pv ul{list-style:none;display:flex;flex-direction:column;gap:.65rem}.pv li{display:flex;gap:.7rem;font-weight:600;font-size:.92rem;align-items:flex-start}
+.pv .yes .i{color:var(--good)}.pv .no .i{color:var(--bad)}
+.flow{display:flex;gap:.6rem;align-items:stretch;flex-wrap:wrap}.flow .n{flex:1;min-width:150px;background:var(--surface-2);border-radius:16px;padding:1rem;font-size:.85rem}.flow .n b{display:block;font:800 1rem var(--font-display);margin:.4rem 0 .2rem}.flow .ar{align-self:center;color:var(--orange)}
+.acct{display:flex;align-items:center;gap:.8rem}.acct .av{width:40px;height:40px}
+.det{display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.2rem;grid-column:1/-1}.det div small{display:block;color:var(--muted);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}.det div{font-weight:600;word-break:break-all}
+@media(max-width:860px){.pv{grid-template-columns:1fr}.flow .ar{display:none}}
+</style>
+</head>
+<body>
+<section class="gate" id="gate" hidden>
+  <div class="gate-art"><div class="orb" style="width:380px;height:380px;right:-120px;top:-100px"></div>
+    <img class="hlogo" src="assets/brand/logo-h-dark.png" alt="Nano Wealth" style="position:relative">
+    <div style="position:relative"><span class="badge orange" style="margin-bottom:1rem">ADMIN PORTAL</span><h1>Run Nano Wealth <em>without seeing a rupee.</em></h1><p>View and manage member accounts. Spending data stays in each member's own Google Sheet — the portal has no way to read it.</p></div>
+    <div class="prod-of"><span>A product of</span><img src="assets/brand/nanofly-light.png" alt="NanoFly Infotech"></div></div>
+  <div class="gate-form"><div class="gate-box"><div><h2 id="gT">Admin sign-in</h2><p class="muted" id="gS" style="margin-top:.5rem">Sign in with an authorised Google account.</p></div>
+    <div class="demo-note" id="demoNote" hidden>Demo mode — showing sample accounts stored in this browser.</div>
+    <button class="gbtn" id="gBtn"></button><p class="faint" style="font-size:.8rem"><a href="./" style="text-decoration:underline">← Back to website</a></p></div></div>
+</section>
+<div class="shell" id="shell" hidden>
+  <aside class="side"><a class="logo" href="./"><img class="hlogo" src="assets/brand/logo-h-dark.png" alt="Nano Wealth"></a>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-card"><div class="lockline" id="lockLine"></div><div class="me"><div class="av" id="avatar"></div><div style="min-width:0"><div class="nm" id="meName"></div><div class="em" id="meEmail"></div></div><button class="btn btn-icon" id="out" title="Sign out" style="margin-left:auto;background:rgba(246,246,233,.08);border-color:transparent;color:var(--cream)"></button></div></div></aside>
+  <div class="main"><div id="demoBanner" class="banner" hidden>Demo mode · sample accounts · connect Google &amp; the registry in <code>js/config.js</code></div>
+    <header class="top"><h1 id="pt">Overview<span class="sub" id="ps"></span></h1><button class="btn btn-ghost btn-sm" id="rf"></button><button class="btn btn-icon" id="themeBtn"></button></header>
+    <main class="view" id="view"></main></div>
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+<script src="/nw-config.js"></script><script src="/nw-core.js"></script><script src="/nw-auth.js"></script><script src="/nw-registry.js"></script><script src="/nw-charts.js"></script><script src="/nw-admin.js"></script>
+<script>window.addEventListener('load',function(){setTimeout(function(){if(window.NS)return;var d=document.createElement('div');d.setAttribute('role','alert');d.style.cssText='position:fixed;inset:auto 16px 16px 16px;max-width:560px;margin:auto;z-index:99999;background:#291B25;color:#F6F6E9;border:2px solid #ED5B2D;border-radius:16px;padding:16px 18px;font:600 14px/1.5 system-ui,sans-serif';d.innerHTML='Nano Wealth could not load its scripts (<code>/nw-*.js</code>).<br>Open it from your website address, e.g. <b>https://nanoflyinfotech.com/nanowealth/app.html</b>, and make sure the <code>nw-*.js</code> files are uploaded to the site <b>root</b>. Opening the file directly or serving only the nanowealth folder will not work.';document.body.appendChild(d)},1500)});</script>
+</body></html>

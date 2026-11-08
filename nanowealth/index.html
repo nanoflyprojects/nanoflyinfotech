@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nano Wealth — Track · Plan · Grow your money</title>
+<meta name="description" content="Nano Wealth tracks your investments, expenses, loans, debts and income in one place — stored in your own Google Sheet that nobody else can see.">
+<meta name="theme-color" content="#F6F6E9"><link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/favicon-32.png"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta property="og:title" content="Nano Wealth — Take control of your finances"><meta property="og:image" content="assets/brand/logo-h-on-cream.png">
+<link rel="stylesheet" href="css/brand.css"><link rel="stylesheet" href="css/app.css"><link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav-top" id="nav"><div class="wrap">
+  <a href="#top"><img class="hlogo logo-l" src="assets/brand/logo-h-light.png" alt="Nano Wealth — Track, Plan, Grow"><img class="hlogo logo-d" src="assets/brand/logo-h-dark.png" alt="" aria-hidden="true"></a>
+  <nav class="links"><a href="#features">Features</a><a href="#how">How it works</a><a href="#privacy">Privacy</a><a href="#projector">Try it</a><a href="#faq">FAQ</a></nav>
+  <div class="cta"><button class="btn btn-icon" id="themeBtn" aria-label="Toggle theme"></button><a class="btn btn-ghost btn-sm" href="app.html">Sign in</a><a class="btn btn-primary btn-sm" href="app.html">Get started free</a></div>
+</div></header>
+
+<section class="hero" id="top">
+  <div class="blob" style="width:520px;height:520px;right:-140px;top:-80px"></div><div class="blob" style="width:300px;height:300px;left:-100px;bottom:0;opacity:.14"></div>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">NS_I_spark Your complete personal finance dashboard</span>
+      <h1>Take control of <em>your finances.</em></h1>
+      <p class="lead">Track your investments, expenses, loans, debts and income — all in one place. Your data lives in <b>your own Google Sheet</b>, so it’s truly yours.</p>
+      <div class="btns"><a class="btn btn-primary btn-lg" href="app.html">NS_I_zap Start for free</a><a class="btn btn-ghost btn-lg" href="#projector">See what you could save</a></div>
+      <div class="proof"><span>NS_I_check Sign in with Google</span><span>NS_I_check No cards, no ads</span><span>NS_I_check Admin can’t see your data</span></div>
+    </div>
+    <div class="mock reveal" id="mock">
+      <div class="float" style="left:-34px;top:60px"><span class="ic" style="background:var(--good-bg);color:var(--good)">NS_I_arrowD</span><div><small>Income received</small>+₹85,000</div></div>
+      <div class="float" style="right:-20px;bottom:90px;animation-delay:-2s"><span class="ic" style="background:var(--warn-bg);color:var(--warn)">NS_I_clock</span><div><small>Home loan EMI</small>Due in 3 days</div></div>
+      <div class="mock-card" id="mcard">
+        <div class="mock-top"><div class="dots"><i></i><i></i><i></i></div><span class="badge good">NS_I_lock Private to you</span></div>
+        <div class="mock-nw"><small>Net worth</small><b id="mnw">₹0</b><span class="badge good" style="background:rgba(60,203,147,.18)">▲ 12.4% this year</span></div>
+        <div class="mock-bars" id="mbars"></div>
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;color:var(--muted)"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+        <div class="mock-row"><div><small>Savings rate</small><b class="pos">38%</b></div><div style="display:flex;align-items:center;justify-content:space-between"><div><small>Spending</small><b>₹62k</b></div><div class="donut-css"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="features"><div class="wrap">
+  <div class="sec-h reveal"><span class="eyebrow">EVERYTHING IN ONE PLACE</span><h2 style="margin-top:1rem">One app for <span class="grad">every rupee</span></h2><p>From your morning chai to your home loan — see income, spending, debts and investments side by side.</p></div>
+  <div class="feats" id="featGrid"></div>
+</div></section>
+
+<section class="sec" id="how" style="background:var(--surface-2)"><div class="wrap">
+  <div class="sec-h reveal"><h2>Ready in <span class="grad">under a minute</span></h2><p>No forms, no passwords to remember.</p></div>
+  <div class="steps3">
+    <div class="st3 reveal"><div class="num-c">1</div><h3>Sign in with Google</h3><p>One tap. We only ask for permission to the single sheet we create for you.</p></div>
+    <div class="st3 reveal"><div class="num-c">2</div><h3>We create your private sheet</h3><p>A fresh Google Sheet appears in <i>your</i> Drive, owned by you, set up with all the tabs.</p></div>
+    <div class="st3 reveal"><div class="num-c">3</div><h3>Track, plan, grow</h3><p>Add entries, set budgets, run calculators — and watch your dashboard come alive.</p></div>
+  </div>
+</div></section>
+
+<section class="sec dark" id="privacy"><div class="blob" style="width:420px;height:420px;left:-120px;top:20%;opacity:.25"></div><div class="wrap priv">
+  <div class="reveal"><span class="eyebrow" style="background:rgba(246,246,233,.1);color:var(--orange-warm)">PRIVACY BY DESIGN</span><h2 style="font-size:clamp(2rem,4vw,3rem);margin-top:1rem">Your money data is <span class="grad">nobody’s business.</span></h2>
+    <ul>
+      <li><span class="ic">NS_I_sheet</span><div><b>Stored in your own Google Sheet</b><span>Created by you, in your Drive. Export, edit or delete it any time.</span></div></li>
+      <li><span class="ic">NS_I_eyeoff</span><div><b>Even the admin can’t see it</b><span>The admin portal lists accounts — names and join dates. It has no way to read your numbers.</span></div></li>
+      <li><span class="ic">NS_I_lock</span><div><b>Access is cleaned up automatically</b><span>On every sign-in Nano Wealth removes anyone else from your sheet — including the creator of the app.</span></div></li>
+    </ul></div>
+  <div class="reveal"><div class="sheet-vis"><div class="bar">NS_I_sheet Nano Wealth — My Money Data</div>
+    <table><tr><th>date</th><th>description</th><th>category</th><th>amount</th></tr><tr><td>2026-11-02</td><td>House rent</td><td>Rent</td><td>22000</td></tr><tr><td>2026-11-07</td><td>Groceries</td><td>Food</td><td>2563</td></tr><tr><td>2026-11-12</td><td>Swiggy dinner</td><td>Food</td><td>3484</td></tr></table>
+    <div class="acc"><span class="badge good">NS_I_shield Only you</span><span>who has access: you (owner)</span></div></div></div>
+</div></section>
+
+<section class="sec" id="projector"><div class="wrap">
+  <div class="sec-h reveal"><span class="eyebrow">TRY IT NOW</span><h2 style="margin-top:1rem">What could your savings <span class="grad">grow into?</span></h2><p>Move the sliders — no sign-up needed.</p></div>
+  <div class="proj reveal"><div id="pin"></div><div id="pout"></div></div>
+</div></section>
+
+<section class="sec" id="faq" style="padding-top:2rem"><div class="wrap">
+  <div class="sec-h reveal"><h2>Questions, answered</h2></div>
+  <div class="faq reveal">
+    <details open><summary>Where is my data stored?</summary><p>In a Google Sheet that Nano Wealth creates in your own Google Drive the first time you sign in. You are the owner. Nano Wealth’s servers don’t keep a copy.</p></details>
+    <details><summary>Can the admin see my transactions?</summary><p>No. The admin portal only shows account details such as name, email, join date and status. It has no connection to your sheet and cannot open it.</p></details>
+    <details><summary>What permission does Nano Wealth ask Google for?</summary><p>Only <i>drive.file</i> — access limited to files the app itself created. It cannot browse the rest of your Drive.</p></details>
+    <details><summary>What if I stop using Nano Wealth?</summary><p>Your sheet stays in your Drive and keeps working as a normal spreadsheet. You can delete your account from Settings at any time.</p></details>
+    <details><summary>Does it work on my phone?</summary><p>Yes — Nano Wealth is fully responsive and can be installed as an app from your browser.</p></details>
+  </div>
+</div></section>
+
+<section><div class="wrap"><div class="cta-band reveal"><img src="assets/brand/icon-orange.png" alt="" style="display:none"><h2>Start tracking in 60 seconds.</h2><p>Track · Plan · Grow — with a dashboard built around you.</p><a class="btn btn-lg" href="app.html">NS_I_zap Open Nano Wealth</a></div></div></section>
+
+<footer><div class="wrap"><div class="cols">
+  <div><img class="hlogo" src="assets/brand/logo-h-dark.png" alt="Nano Wealth"><p>Take Control of Your Finances.<br>Track your Investments, Expenses, Loans, Debts and Income — All in One Place!</p></div>
+  <div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#privacy">Privacy</a></li><li><a href="app.html">Open app</a></li></ul></div>
+  <div><h4>Company</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="admin.html">Admin portal</a></li></ul></div>
+</div><div class="bottom"><span>© <span id="yr"></span> Nano Wealth</span><span class="prod-of"><span>A product of</span><img src="assets/brand/nanofly-light.png" alt="NanoFly Infotech"></span></div></div></footer>
+<script src="/nw-config.js"></script><script src="/nw-core.js"></script><script src="/nw-calc.js"></script><script src="/nw-charts.js"></script><script src="/nw-landing.js"></script>
+<script>window.addEventListener('load',function(){setTimeout(function(){if(window.NS)return;var d=document.createElement('div');d.setAttribute('role','alert');d.style.cssText='position:fixed;inset:auto 16px 16px 16px;max-width:560px;margin:auto;z-index:99999;background:#291B25;color:#F6F6E9;border:2px solid #ED5B2D;border-radius:16px;padding:16px 18px;font:600 14px/1.5 system-ui,sans-serif';d.innerHTML='Nano Wealth could not load its scripts (<code>/nw-*.js</code>).<br>Open it from your website address, e.g. <b>https://nanoflyinfotech.com/nanowealth/app.html</b>, and make sure the <code>nw-*.js</code> files are uploaded to the site <b>root</b>. Opening the file directly or serving only the nanowealth folder will not work.';document.body.appendChild(d)},1500)});</script>
+</body></html>
